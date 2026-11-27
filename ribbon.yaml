@@ -18,7 +18,14 @@
 #         title: <label>             # its label (optional with action:)
 #         items: [<objectNames>]     # commands, or menus (shown as submenus); "-" draws a line;
 #                                    # "<menu objectName>/*": that menu's commands right in the
-#                                    # list, between lines (e.g. "mRecentProjectsMenu/*")
+#                                    # list, between lines (e.g. "mRecentProjectsMenu/*");
+#                                    # "<menu objectName>/*:title": the same under the menu's
+#                                    # name, a caption that is not clicked; caption: or note:
+#                                    # (below) as items too
+#     - caption: {text: <text>, for: <objectName>}   # a text in the rows, never clicked
+#     - note: {text: <text>, for: <objectName>}      # the same, plain (caption: semibold)
+#         text: optional (default "{title}"); {title} is the label of the command or menu
+#         named in for:, {id} its objectName; for: optional. Plain text: caption: "<text>"
 #   large:   objectNames shown as large buttons (optional; a dropdown by its action, else title)
 #   layout:  labels | icons | auto   (auto: plugins' groups; large labelled buttons
 #            for up to 3 actions, else icons)

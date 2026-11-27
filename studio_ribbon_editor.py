@@ -13,7 +13,9 @@ Two views of the same file:
   is a button with a list of its own: commands dropped on it go into its
   list (menus show as submenus, or their commands right in the list:
   "contents" items, e.g. the recent projects), and its own command, if it
-  has one, is on its face.
+  has one, is on its face. Captions and notes are texts of one's own in a
+  group's rows or a dropdown's list, never clicked; {title} and {id} in
+  them stand for the label and objectName of the command they are for.
 - YAML: the file as text (format in ribbon.yaml's header), checked before it
   is used.
 
@@ -52,7 +54,35 @@ TAB, GROUP, ENTRY, ITEM = 0, 1, 2, 3
 CMD, REST, MENU, DROP, LISTED = "cmd", "rest", "menu", "dropdown", "item"
 SEPARATOR = studio_ribbon.SEPARATOR
 CONTENTS = studio_ribbon.CONTENTS
+TITLED = studio_ribbon.TITLED
 item_menu = studio_ribbon.item_menu
+item_titled = studio_ribbon.item_titled
+# Captions and notes: {"kind": CAPTION or NOTE, "text", "for"} (either may
+# be None), in a group or in a dropdown's list.
+CAPTION, NOTE = studio_ribbon.CAPTION, studio_ribbon.NOTE
+LABEL_KINDS = studio_ribbon.LABEL_KINDS
+
+
+def label_entry(kind, value):
+    """A caption or note of ribbon.yaml (text, or a mapping) as an entry."""
+    value = {"text": value} if isinstance(value, str) else (value or {})
+    return {"kind": kind, "text": value.get("text"), "for": value.get("for")}
+
+
+def label_yaml(entry):
+    """A caption or note entry as ribbon.yaml has it."""
+    return {entry["kind"]: {k: entry[k] for k in ("text", "for") if entry.get(k)}}
+
+
+def _dropdown_items(items):
+    """A dropdown's items with captions and notes in one shape."""
+    out = []
+    for item in items or ():
+        if isinstance(item, dict):
+            kind = next(iter(item))
+            item = label_yaml(label_entry(kind, item[kind]))
+        out.append(item)
+    return out
 
 
 def entry_key(entry):
@@ -100,7 +130,9 @@ def tabs_from_data(data):
                 elif "dropdown" in source:
                     spec = source["dropdown"]
                     entries.append({"kind": DROP, "action": spec.get("action"), "title": spec.get("title"),
-                                    "items": list(spec.get("items") or ())})
+                                    "items": _dropdown_items(spec.get("items"))})
+                else:
+                    entries += [label_entry(k, source[k]) for k in LABEL_KINDS if k in source][:1]
             groups.append({
                 "title": group["title"], "layout": group.get("layout", studio_ribbon.LABELS),
                 "large": list(group.get("large") or ()), "rows": [list(r) for r in group.get("rows") or ()],
@@ -121,9 +153,11 @@ def data_from_tabs(tabs):
                 last = sources[-1] if sources else None
                 if entry["kind"] == REST:
                     sources.append({"toolbar": entry["toolbar"]})
+                elif entry["kind"] in LABEL_KINDS:
+                    sources.append(label_yaml(entry))
                 elif entry["kind"] == DROP:
                     spec = {k: entry[k] for k in ("action", "title") if entry.get(k)}
-                    spec["items"] = list(entry.get("items") or ())
+                    spec["items"] = _dropdown_items(entry.get("items"))
                     sources.append({"dropdown": spec})
                 elif entry["kind"] == MENU:
                     if last is not None and "menu" in last:
@@ -211,6 +245,9 @@ def dump(data, head=None):
                         if spec.get(key):
                             lines.append(f"              {key}: {_quoted(spec[key])}")
                     _names(lines, "              ", "items", spec.get("items") or [])
+                elif any(kind in source for kind in LABEL_KINDS):
+                    kind = next(kind for kind in LABEL_KINDS if kind in source)
+                    lines.append(f"          - {kind}: {_quoted(source[kind])}")
                 else:
                     key = "main" if "main" in source else "menu"
                     _names(lines, "          ", f"- {key}", source[key])
@@ -360,7 +397,10 @@ class _YamlHighlighter(QSyntaxHighlighter):
 
 def listed(entry):
     """A dropdown's item for a palette or group entry: a command or menu by
-    name; a menu's "everything else" as its contents."""
+    name; a menu's "everything else" as its contents; a caption or note as
+    it is."""
+    if entry["kind"] in LABEL_KINDS:
+        return dict(entry)
     if entry["kind"] == MENU:
         return {"kind": LISTED, "name": entry["name"] + CONTENTS}
     return {"kind": LISTED, "name": entry["name"]}
@@ -585,7 +625,7 @@ class _RibbonTree(QTreeWidget):
                 if level == ITEM:
                     return ("move", payload) + spot if inside else None
                 kinds = {(p.data(0, ROLE) if inside else p)["kind"] for p in payload}
-                if kinds <= {CMD, MENU}:
+                if kinds <= {CMD, MENU, CAPTION, NOTE}:
                     return ("into", payload) + spot
             if level == ITEM:
                 target = self._target(ENTRY, event)
@@ -630,11 +670,12 @@ class _RibbonTree(QTreeWidget):
                 self._take(payload)
             self.add_entries([listed(e) for e in entries], parent, index)
         else:
-            names = [p.data(0, ROLE)["name"] for p in payload]
+            entries = [p.data(0, ROLE) for p in payload]
             self._take(payload)
-            self.add_entries([{"kind": MENU, "name": item_menu(n)} if item_menu(n) else
-                              {"kind": CMD, "name": n, "toolbar": self.toolbar_of(n)}
-                              for n in names if n != SEPARATOR], parent, index)
+            self.add_entries([dict(e) if e["kind"] in LABEL_KINDS else
+                              {"kind": MENU, "name": item_menu(e["name"])} if item_menu(e["name"]) else
+                              {"kind": CMD, "name": e["name"], "toolbar": self.toolbar_of(e["name"])}
+                              for e in entries if e.get("name") != SEPARATOR], parent, index)
 
     def _take(self, items):
         root = self.invisibleRootItem()
@@ -681,7 +722,7 @@ class _RibbonTree(QTreeWidget):
     @staticmethod
     def _identity(entry):
         """What makes two entries the same: dropdowns and lines never are."""
-        if entry["kind"] == DROP or entry.get("name") == SEPARATOR:
+        if entry["kind"] in (DROP,) + LABEL_KINDS or entry.get("name") == SEPARATOR:
             return object()
         return entry["kind"], entry.get("toolbar") if entry["kind"] == REST else entry.get("name")
 
@@ -799,6 +840,10 @@ class RibbonEditorDialog(QDialog):
                  self._tree.remove_selected),
                 (moves, "▲", _t("Move up"), lambda: self._shift(-1)),
                 (moves, "▼", _t("Move down"), lambda: self._shift(1)),
+                (moves, _t("Add Caption"), _t("A semibold text that is not clicked, in the chosen group's rows "
+                                              "or dropdown's list"), lambda: self._add_label(CAPTION)),
+                (moves, _t("Add Note"), _t("A plain text that is not clicked, in the chosen group's rows "
+                                           "or dropdown's list"), lambda: self._add_label(NOTE)),
                 (moves, _t("Expand All"), "", self._tree.expandAll),
                 (moves, _t("Collapse All"), "", self._tree.collapseAll)):
             button = QPushButton(text)
@@ -888,6 +933,9 @@ class RibbonEditorDialog(QDialog):
         self._inline = QCheckBox(_t("Its commands right in the list, between lines (not a submenu)"))
         self._inline.toggled.connect(self._inline_toggled)
         form.addRow(_t("Menu"), self._inline)
+        self._titled = QCheckBox(_t("With the menu's name above them (not clickable)"))
+        self._titled.toggled.connect(self._inline_toggled)
+        form.addRow("", self._titled)
         form.addRow(_t("Shown as"), self._shown_as)
         form.addRow(_t("Buttons"), self._layout)
         form.addRow(_t("Large buttons"), self._large)
@@ -955,6 +1003,16 @@ class RibbonEditorDialog(QDialog):
         menus.setFont(0, bold)
         for menu in catalog.menus:
             self._palette_menu(menus, menu)
+        texts = QTreeWidgetItem(palette, [_t("Texts")])
+        texts.setFlags(Qt.ItemFlag.ItemIsEnabled)
+        texts.setFont(0, bold)
+        for kind, text, tip in (
+                (CAPTION, _t("Caption"), _t("A semibold text that is not clicked")),
+                (NOTE, _t("Note"), _t("A plain text that is not clicked"))):
+            self._palette_item(texts, text, kind, {"kind": kind, "text": text, "for": None}, tip=tip)
+        # Texts first: two entries, easily missed under the long lists.
+        palette.insertTopLevelItem(0, palette.takeTopLevelItem(palette.indexOfTopLevelItem(texts)))
+        texts.setExpanded(True)
         toolbars.setExpanded(True)
         menus.setExpanded(True)
 
@@ -992,7 +1050,7 @@ class RibbonEditorDialog(QDialog):
                     if entry["kind"] == CMD:
                         placed.setdefault(entry["name"], []).append(where)
                     elif entry["kind"] == DROP:
-                        for name in [entry.get("action")] + [c.data(0, ROLE)["name"] for c in _children(item)]:
+                        for name in [entry.get("action")] + [c.data(0, ROLE).get("name") for c in _children(item)]:
                             if not name or name == SEPARATOR:
                                 continue
                             menu = item_menu(name)
@@ -1001,6 +1059,8 @@ class RibbonEditorDialog(QDialog):
                                 placed.setdefault("menu:" + menu, []).append(where)
                                 for inner in self._menu_names(menu):
                                     through.setdefault(inner, where)
+                    elif entry["kind"] in LABEL_KINDS:
+                        continue
                     elif entry["kind"] == REST:
                         placed.setdefault("rest:" + entry["toolbar"], []).append(where)
                         for name in self._toolbar_names(entry["toolbar"]):
@@ -1050,7 +1110,7 @@ class RibbonEditorDialog(QDialog):
             item = iterator.value()
             iterator += 1
             entry = item.data(0, ROLE)
-            if not entry:
+            if not entry or entry["kind"] in LABEL_KINDS:
                 continue
             key = {CMD: entry.get("name"), REST: "rest:" + str(entry.get("toolbar")),
                    MENU: "menu:" + str(entry.get("name"))}[entry["kind"]]
@@ -1094,7 +1154,8 @@ class RibbonEditorDialog(QDialog):
         entries = [i.data(0, ROLE) for i in self._palette.selectedItems() if i.data(0, ROLE)]
         dropdown = self._current_dropdown()
         if dropdown is not None:
-            self._tree.add_entries([listed(e) for e in entries if e["kind"] in (CMD, MENU)], dropdown)
+            self._tree.add_entries([listed(e) for e in entries if e["kind"] in (CMD, MENU) + LABEL_KINDS],
+                                   dropdown)
             return
         group = self._current_group()
         if group is None:
@@ -1143,9 +1204,17 @@ class RibbonEditorDialog(QDialog):
             large = group is not None and key in (group.data(0, ROLE) or {}).get("large", ())
             item.setCheckState(2, Qt.CheckState.Checked if large else Qt.CheckState.Unchecked)
             for name in item_names:
-                item.addChild(self._make_entry({"kind": LISTED, "name": name}, item))
+                if isinstance(name, dict):
+                    kind = next(iter(name))
+                    item.addChild(self._make_entry(label_entry(kind, name[kind]), item))
+                else:
+                    item.addChild(self._make_entry({"kind": LISTED, "name": name}, item))
             item.setExpanded(True)
             found = not entry.get("action") or catalog.found(entry["action"])
+        elif entry["kind"] in LABEL_KINDS:
+            item.setFlags(flags)
+            self._show_label(item)
+            found = not entry.get("for") or catalog.found(entry["for"])
         elif entry["kind"] == LISTED:
             name = entry["name"]
             item.setFlags(flags)
@@ -1156,7 +1225,8 @@ class RibbonEditorDialog(QDialog):
             elif item_menu(name):
                 menu = item_menu(name)
                 title = catalog.menu_titles.get(menu) or catalog.label(menu)[0]
-                item.setText(0, _t("All of “{menu}”").format(menu=title))
+                item.setText(0, _t("All of “{menu}”, under its name").format(menu=title) if item_titled(name)
+                             else _t("All of “{menu}”").format(menu=title))
                 item.setText(1, f"{menu} · {_t('its commands in the list')}")
                 item.setToolTip(0, _t("The menu's commands right in this list, between lines, "
                                       "as the menu shows them when the list opens"))
@@ -1194,7 +1264,7 @@ class RibbonEditorDialog(QDialog):
             item.setFlags(flags)
             found = name in catalog.menu_titles or catalog.found(name)
         font = item.font(0)
-        if entry["kind"] in (REST, MENU):
+        if entry["kind"] in (REST, MENU) + LABEL_KINDS:
             font.setItalic(True)
         if not found:
             font.setItalic(True)
@@ -1214,6 +1284,20 @@ class RibbonEditorDialog(QDialog):
                         else _t("A dropdown: a button opening its list"))
         icon = self._catalog.icon(action) if action else None
         item.setIcon(0, icon if icon is not None else QIcon())
+
+    def _label_preview(self, entry):
+        """A caption's or note's text as the ribbon will show it."""
+        target = entry.get("for")
+        title = self._catalog.label(target)[0] if target and self._catalog.found(target) else ""
+        return studio_ribbon.label_text(entry.get("text"), title, target)
+
+    def _show_label(self, item):
+        """A caption's or note's row: its text as shown, what it is."""
+        entry = item.data(0, ROLE)
+        word = _t("caption") if entry["kind"] == CAPTION else _t("note")
+        item.setText(0, f"“{self._label_preview(entry)}”")
+        item.setText(1, f"{word} · {entry.get('for') or '—'}")
+        item.setToolTip(0, entry.get("text") or "{title}")
 
     def _make_container(self, title, data):
         item = QTreeWidgetItem([title])
@@ -1274,7 +1358,8 @@ class RibbonEditorDialog(QDialog):
         """A tree entry as tabs_from_data gives it (a dropdown with its list)."""
         entry = dict(item.data(0, ROLE))
         if entry["kind"] == DROP:
-            entry["items"] = [c.data(0, ROLE)["name"] for c in _children(item)]
+            entry["items"] = [label_yaml(c.data(0, ROLE)) if c.data(0, ROLE)["kind"] in LABEL_KINDS
+                              else c.data(0, ROLE)["name"] for c in _children(item)]
         return entry
 
     def _candidates(self, group, explicit=None):
@@ -1391,6 +1476,24 @@ class RibbonEditorDialog(QDialog):
         self._tree_changed()
         self._say(_t("Drop commands or menus on the dropdown to fill its list."))
 
+    def _add_label(self, kind):
+        """A caption or note after the chosen item: in a dropdown's list when
+        a dropdown or one of its items is chosen, else in the chosen group."""
+        entry = {"kind": kind, "text": _t("Caption") if kind == CAPTION else _t("Note"), "for": None}
+        item = self._tree.currentItem()
+        parent = self._current_dropdown()
+        if parent is None:
+            parent = self._current_group()
+            if parent is None:
+                self._say(_t("Choose a group on the left first."), error=True)
+                return
+        index = parent.indexOfChild(item) + 1 if item is not None and item.parent() is parent else parent.childCount()
+        added = self._tree.add_entries([entry], parent, index)
+        if added:
+            self._tree.setCurrentItem(added[0])
+            self._title.setFocus()
+            self._title.selectAll()
+
     def _add_line(self):
         dropdown = self._current_dropdown()
         if dropdown is None:
@@ -1450,9 +1553,14 @@ class RibbonEditorDialog(QDialog):
         depth = _depth(item) if item is not None else None
         form = self._form
         dropdown = depth == ENTRY and item.data(0, ROLE)["kind"] == DROP
-        for widget, shown in ((self._title, depth in (TAB, GROUP) or dropdown),
-                              (self._shown_as, depth in (TAB, GROUP)), (self._command, dropdown),
+        label = depth in (ENTRY, ITEM) and item.data(0, ROLE)["kind"] in LABEL_KINDS
+        form.labelForField(self._title).setText(_t("Text") if label else _t("Title"))
+        form.labelForField(self._command).setText(_t("For command") if label else _t("Button command"))
+        self._command.setItemText(0, _t("(none)") if label else _t("(none: the button only opens its list)"))
+        for widget, shown in ((self._title, depth in (TAB, GROUP) or dropdown or label),
+                              (self._shown_as, depth in (TAB, GROUP)), (self._command, dropdown or label),
                               (self._inline, depth == ITEM and self._is_menu_item(item)),
+                              (self._titled, depth == ITEM and self._is_menu_item(item)),
                               (self._layout, depth == GROUP), (self._large, depth == GROUP)):
             form.setRowVisible(widget, shown)
         if depth is None:
@@ -1488,17 +1596,18 @@ class RibbonEditorDialog(QDialog):
             self._info.setText("\n".join(info))
             return
         entry = item.data(0, ROLE)
+        if label:
+            self._title.setText(entry.get("text") or "")
+            self._title.setPlaceholderText("{title}")
+            self._set_command(entry.get("for") or "")
+            self._info.setText(_t("Shown: {text}").format(text=self._label_preview(entry)) + "\n\n" + _t(
+                "Never clicked. In the text, {title} is the label of the command or menu chosen above "
+                "and {id} its objectName; without a text, its label is shown."))
+            return
         if dropdown:
             self._title.setText(entry.get("title") or "")
             self._title.setPlaceholderText(_t("(the command's own label)") if entry.get("action") else "")
-            action = entry.get("action") or ""
-            index = self._command.findData(action) if action else 0
-            blocked = self._command.blockSignals(True)
-            if index >= 0:
-                self._command.setCurrentIndex(index)
-            else:
-                self._command.setEditText(action)
-            self._command.blockSignals(blocked)
+            self._set_command(entry.get("action") or "")
             self._info.setText(_t("Its list: drop commands or menus (submenus) on it, or a menu's “everything "
                                   "else” for its commands right in the list; Add Line for a line. "
                                   "With a command, the button runs it and its arrow opens the list; "
@@ -1506,9 +1615,11 @@ class RibbonEditorDialog(QDialog):
             return
         if depth == ITEM:
             name = item.data(0, ROLE)["name"]
-            blocked = self._inline.blockSignals(True)
-            self._inline.setChecked(bool(item_menu(name)))
-            self._inline.blockSignals(blocked)
+            for box, value in ((self._inline, bool(item_menu(name))), (self._titled, item_titled(name))):
+                blocked = box.blockSignals(True)
+                box.setChecked(value)
+                box.blockSignals(blocked)
+            self._titled.setEnabled(bool(item_menu(name)))
             self._info.setText(f"{item.text(0)}\n{item.text(1)}\n\n" + _t(
                 "An item of the dropdown's list. Drag it onto a group to make it a button again."))
             return
@@ -1519,19 +1630,30 @@ class RibbonEditorDialog(QDialog):
         }
         self._info.setText(f"{item.text(0)}\n{item.text(1)}\n\n{texts[entry['kind']]}")
 
+    def _set_command(self, name):
+        index = self._command.findData(name) if name else 0
+        blocked = self._command.blockSignals(True)
+        if index >= 0:
+            self._command.setCurrentIndex(index)
+        else:
+            self._command.setEditText(name)
+        self._command.blockSignals(blocked)
+
     def _is_menu_item(self, item):
-        name = item.data(0, ROLE)["name"]
+        name = item.data(0, ROLE).get("name") or ""
         return bool(item_menu(name)) or name in self._catalog.menu_titles
 
-    def _inline_toggled(self, checked):
-        """A menu in a dropdown's list as a submenu, or its commands."""
+    def _inline_toggled(self, _checked):
+        """A menu in a dropdown's list as a submenu, or its commands (under
+        its name or not), as the two switches say."""
         item = self._tree.currentItem()
         if item is None or _depth(item) != ITEM or not self._is_menu_item(item):
             return
         menu = item_menu(item.data(0, ROLE)["name"]) or item.data(0, ROLE)["name"]
         dropdown = item.parent()
         index = dropdown.indexOfChild(item)
-        replacement = self._make_entry({"kind": LISTED, "name": menu + CONTENTS if checked else menu}, dropdown)
+        suffix = (TITLED if self._titled.isChecked() else CONTENTS) if self._inline.isChecked() else ""
+        replacement = self._make_entry({"kind": LISTED, "name": menu + suffix}, dropdown)
         self._syncing = True
         dropdown.removeChild(item)
         dropdown.insertChild(index, replacement)
@@ -1545,15 +1667,34 @@ class RibbonEditorDialog(QDialog):
             item.setText(0, text)
         elif item is not None and _depth(item) == ENTRY and item.data(0, ROLE)["kind"] == DROP:
             self._change_dropdown(item, title=text.strip() or None)
+        elif item is not None and item.data(0, ROLE) and item.data(0, ROLE).get("kind") in LABEL_KINDS:
+            self._change_label(item, text=text or None)
+
+    def _change_label(self, item, **changes):
+        entry = item.data(0, ROLE)
+        entry.update(changes)
+        if entry == item.data(0, ROLE):
+            return
+        self._syncing = True
+        item.setData(0, ROLE, entry)
+        self._show_label(item)
+        self._syncing = False
+        self._tree_changed()
 
     def _command_changed(self, *_args):
         item = self._tree.currentItem()
-        if item is None or _depth(item) != ENTRY or item.data(0, ROLE)["kind"] != DROP:
+        if item is None or _depth(item) not in (ENTRY, ITEM):
+            return
+        kind = item.data(0, ROLE)["kind"]
+        if kind != DROP and kind not in LABEL_KINDS:
             return
         text = self._command.currentText().strip()
         index = self._command.findText(text)
         name = self._command.itemData(index) if index >= 0 else text
-        self._change_dropdown(item, action=name or None)
+        if kind == DROP:
+            self._change_dropdown(item, action=name or None)
+        else:
+            self._change_label(item, **{"for": name or None})
 
     def _change_dropdown(self, item, **changes):
         """Set a dropdown's action or title; its Large tick follows its key."""

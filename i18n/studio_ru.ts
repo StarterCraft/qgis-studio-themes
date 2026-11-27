@@ -1408,5 +1408,77 @@
         <source>Its list: drop commands or menus (submenus) on it, or a menu's “everything else” for its commands right in the list; Add Line for a line. With a command, the button runs it and its arrow opens the list; without one, the button opens the list.</source>
         <translation>Его список: перетащите на него команды или меню (станут подменю) либо «всё остальное» меню — тогда его команды окажутся прямо в списке; «Добавить линию» — линия. С командой кнопка выполняет её, а стрелка открывает список; без команды кнопка открывает список.</translation>
     </message>
+    <message>
+        <source>All of “{menu}”, under its name</source>
+        <translation>Всё из «{menu}», с его названием</translation>
+    </message>
+    <message>
+        <source>With the menu's name above them (not clickable)</source>
+        <translation>С названием меню над ними (не нажимается)</translation>
+    </message>
+    <message>
+        <source>caption</source>
+        <translation>подпись</translation>
+    </message>
+    <message>
+        <source>note</source>
+        <translation>пояснение</translation>
+    </message>
+    <message>
+        <source>Add Caption</source>
+        <translation>Добавить подпись</translation>
+    </message>
+    <message>
+        <source>A semibold text that is not clicked, in the chosen group's rows or dropdown's list</source>
+        <translation>Полужирный текст, который не нажимается, — в рядах выбранной группы или в выпадающем списке</translation>
+    </message>
+    <message>
+        <source>Add Note</source>
+        <translation>Добавить пояснение</translation>
+    </message>
+    <message>
+        <source>A plain text that is not clicked, in the chosen group's rows or dropdown's list</source>
+        <translation>Обычный текст, который не нажимается, — в рядах выбранной группы или в выпадающем списке</translation>
+    </message>
+    <message>
+        <source>Texts</source>
+        <translation>Тексты</translation>
+    </message>
+    <message>
+        <source>Caption</source>
+        <translation>Подпись</translation>
+    </message>
+    <message>
+        <source>A semibold text that is not clicked</source>
+        <translation>Полужирный текст, который не нажимается</translation>
+    </message>
+    <message>
+        <source>Note</source>
+        <translation>Пояснение</translation>
+    </message>
+    <message>
+        <source>A plain text that is not clicked</source>
+        <translation>Обычный текст, который не нажимается</translation>
+    </message>
+    <message>
+        <source>Text</source>
+        <translation>Текст</translation>
+    </message>
+    <message>
+        <source>For command</source>
+        <translation>Для команды</translation>
+    </message>
+    <message>
+        <source>(none)</source>
+        <translation>(нет)</translation>
+    </message>
+    <message>
+        <source>Never clicked. In the text, {title} is the label of the command or menu chosen above and {id} its objectName; without a text, its label is shown.</source>
+        <translation>Не нажимается. В тексте {title} — подпись команды или меню, выбранных выше, а {id} — их objectName; без текста показывается их подпись.</translation>
+    </message>
+    <message>
+        <source>Shown: {text}</source>
+        <translation>Показывается: {text}</translation>
+    </message>
 </context>
 </TS>

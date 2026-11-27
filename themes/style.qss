@@ -211,6 +211,22 @@ QMenu::section {
     padding: 6px 10px 4px 10px;
     font-weight: 600;
 }
+/* A ribbon dropdown's caption above a menu's commands (studio_ribbon
+ * _add_contents): as a menu section's name. */
+QLabel#studioRibbonDropdownCaption {
+    color: @text_dim;
+    padding: 2px 0px 0px 0px;
+    font-weight: 600;
+}
+/* Texts of one's own in a ribbon group's rows (ribbon.yaml caption: and
+ * note:), never clicked. */
+QLabel#studioRibbonCaption {
+    color: @text_dim;
+    font-weight: 600;
+}
+QLabel#studioRibbonNote {
+    color: @text_dim;
+}
 /* Widget glyphs (themes/icons) are drawn on a grid of the exact size they
  * are shown at here, with straight edges on whole pixels: keep a glyph's
  * width/height in sync with its file when changing either. */

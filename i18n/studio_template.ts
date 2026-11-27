@@ -1408,5 +1408,77 @@
         <source>Its list: drop commands or menus (submenus) on it, or a menu's “everything else” for its commands right in the list; Add Line for a line. With a command, the button runs it and its arrow opens the list; without one, the button opens the list.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>All of “{menu}”, under its name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>With the menu's name above them (not clickable)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>caption</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>note</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add Caption</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A semibold text that is not clicked, in the chosen group's rows or dropdown's list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add Note</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A plain text that is not clicked, in the chosen group's rows or dropdown's list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Texts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Caption</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A semibold text that is not clicked</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Note</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A plain text that is not clicked</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Text</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>For command</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>(none)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Never clicked. In the text, {title} is the label of the command or menu chosen above and {id} its objectName; without a text, its label is shown.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Shown: {text}</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 </TS>

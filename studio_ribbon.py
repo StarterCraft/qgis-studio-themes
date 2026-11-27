@@ -192,13 +192,54 @@ DROPDOWN = "dropdown"
 SEPARATOR = "-"
 # A menu's name with CONTENTS after it, in a dropdown's items: the menu's
 # own commands in the list itself, between lines, not as a submenu (e.g.
-# the recent projects in Open's list).
+# the recent projects in Open's list); with TITLED after it, under a caption
+# that is the menu's name (not clickable).
 CONTENTS = "/*"
+TITLED = "/*:title"
 
 
 def item_menu(name):
     """The menu a dropdown item `name` shows the contents of, or None."""
-    return name[:-len(CONTENTS)] if name.endswith(CONTENTS) and len(name) > len(CONTENTS) else None
+    for suffix in (TITLED, CONTENTS):
+        if name.endswith(suffix) and len(name) > len(suffix):
+            return name[:-len(suffix)]
+    return None
+
+
+def item_titled(name):
+    """Whether dropdown item `name` shows its menu's name above its commands."""
+    return name.endswith(TITLED) and len(name) > len(TITLED)
+
+
+# Texts of one's own, never clicked, in a group's rows or a dropdown's list:
+# a caption (dimmed, semibold, as a dropdown's menu name) or a note (plain,
+# dimmed). Their text may hold TEXT_VARIABLES, filled from the command or
+# menu named in "for:": its label as the ribbon shows it, and its
+# objectName.
+CAPTION, NOTE = "caption", "note"
+LABEL_KINDS = (CAPTION, NOTE)
+TEXT_VARIABLES = ("{title}", "{id}")
+
+
+def _label(kind, value, where):
+    """A caption or note of ribbon.yaml as (kind, text or None, for or None)."""
+    if isinstance(value, str):
+        value = {"text": value}
+    if not isinstance(value, dict):
+        raise ValueError(f"{where}: {kind}: expected text: and for:")
+    text, target = value.get("text"), value.get("for")
+    for key, item in (("text", text), ("for", target)):
+        if item is not None and (not isinstance(item, str) or not item):
+            raise ValueError(f"{where}: {kind}: {key}: expected text")
+    if text is None and target is None:
+        raise ValueError(f"{where}: a {kind} needs a text: or a for:")
+    return kind, text, target
+
+
+def label_text(text, title, name):
+    """A caption's or note's text with its variables filled: {title} the
+    command's label, {id} its objectName; "{title}" without a text."""
+    return (text if text is not None else "{title}").replace("{title}", title or "").replace("{id}", name or "")
 
 
 def user_tabs_file():
@@ -229,6 +270,9 @@ def _source(source, where="ribbon.yaml"):
         return "menu", _names(source["menu"], f"{where}: menu")
     if "dropdown" in source:
         return DROPDOWN, _dropdown(source["dropdown"], where)
+    for kind in LABEL_KINDS:
+        if kind in source:
+            return kind, _label(kind, source[kind], where)[1:]
     raise ValueError(f"{where}: unknown source {source!r}")
 
 
@@ -243,8 +287,20 @@ def _dropdown(spec, where):
             raise ValueError(f"{where}: dropdown: {key}: expected text")
     if action is None and title is None:
         raise ValueError(f"{where}: a dropdown needs an action: or a title:")
-    items = _names(spec.get("items") or [], f"{where}: dropdown {title or action!r}: items")
-    return action, title, items
+    where = f"{where}: dropdown {title or action!r}: items"
+    items = spec.get("items") or []
+    if not isinstance(items, list):
+        raise ValueError(f"{where}: expected a list")
+    parsed = []
+    for item in items:
+        if isinstance(item, str) and item:
+            parsed.append(item)
+        elif isinstance(item, dict) and len(item) == 1 and next(iter(item)) in LABEL_KINDS:
+            kind = next(iter(item))
+            parsed.append(_label(kind, item[kind], where))
+        else:
+            raise ValueError(f"{where}: expected objectNames, \"-\", caption: or note:, not {item!r}")
+    return action, title, tuple(parsed)
 
 
 def _group(group, where="ribbon.yaml"):
@@ -943,8 +999,11 @@ class StudioRibbon(QObject):
                         for name in names:
                             self._menu_tabs.setdefault(name, set()).add(index)
                         continue
+                    if source in LABEL_KINDS:
+                        continue
                     if source == DROPDOWN:
-                        held = {item_menu(n) or n for n in (names[0],) + names[2] if n and n != SEPARATOR}
+                        held = {item_menu(n) or n for n in (names[0],) + names[2]
+                                if isinstance(n, str) and n != SEPARATOR}
                         self._dropdown_names |= held
                         self._placed_names |= held
                         continue
@@ -957,7 +1016,7 @@ class StudioRibbon(QObject):
         for _title, groups in TABS:
             for group in groups:
                 for toolbar, names in group[1]:
-                    if toolbar not in ("@", "menu", DROPDOWN):
+                    if toolbar not in ("@", "menu", DROPDOWN) + LABEL_KINDS:
                         self._named.setdefault(toolbar, set()).update(names or ())
         # Names already on the ribbon while a page is built (see _covered).
         self._covered = set()
@@ -965,6 +1024,10 @@ class StudioRibbon(QObject):
         # spec, and the spec of each, by C++ object.
         self._dropdowns = {}
         self._dropdown_of = {}
+        # Captions' and notes' stand-in actions, by (kind, text, for), and
+        # the spec of each, by C++ object.
+        self._labels = {}
+        self._label_of = {}
         # Widgets borrowed from toolbars: [(widget, toolbar, action)].
         self._borrowed = []
         # Action visibility as last seen, by C++ object (ActionChanged is
@@ -1176,6 +1239,11 @@ class StudioRibbon(QObject):
                 action.deleteLater()
         self._dropdowns = {}
         self._dropdown_of = {}
+        for action in self._labels.values():
+            if not sip.isdeleted(action):
+                action.deleteLater()
+        self._labels = {}
+        self._label_of = {}
         # Icons given for the ribbon go: QGIS's menus show none there.
         for action in self._adopted:
             if not sip.isdeleted(action):
@@ -1395,6 +1463,9 @@ class StudioRibbon(QObject):
                 if action is not None:
                     found.append((action, None))
                 continue
+            if name in LABEL_KINDS:
+                found.append((self._label_action((name,) + tuple(names)), None))
+                continue
             if name == "menu":
                 for menu_name in names:
                     menu = self._menus.get(menu_name)
@@ -1572,6 +1643,12 @@ class StudioRibbon(QObject):
         spec = self._dropdown_of.get(sip.unwrapinstance(action))
         if spec is not None:
             return self._dropdown_button(parent, action, spec, kind)
+        spec = self._label_of.get(sip.unwrapinstance(action))
+        if spec is not None:
+            label = self._label_widget(spec)
+            label.setParent(parent)
+            label.setFixedHeight(ROW_HEIGHT)
+            return label
         shown = toolbar.widgetForAction(action) if toolbar is not None else None
         self.placed.add(sip.unwrapinstance(action))
         if isinstance(shown, QToolButton) and shown.defaultAction() is not action:
@@ -1637,6 +1714,44 @@ class StudioRibbon(QObject):
         action.setText(tr(title, "label") if title else main.text())
         return action
 
+    def _label_action(self, spec):
+        """The action standing for caption or note `spec` (kind, text, for)
+        in a group (so it takes its place among the buttons)."""
+        action = self._labels.get(spec)
+        if action is None or sip.isdeleted(action):
+            action = QAction(self)
+            action.setObjectName(f"{spec[0]}:{spec[1] or ''}:{spec[2] or ''}")
+            self._labels[spec] = action
+            self._label_of[sip.unwrapinstance(action)] = spec
+        return action
+
+    def _label_widget(self, spec, in_menu=False, translate=True):
+        """A caption's or note's label (style.qss QLabel#studioRibbonCaption,
+        #studioRibbonNote, or #studioRibbonDropdownCaption in a list), its
+        variables filled from the command or menu it is for."""
+        kind, text, target = spec
+        action = self._find(target) if target else None
+        title = ""
+        if action is not None:
+            menu = menu_of(action)
+            own = clean(menu.title() if menu is not None and not action.text() else action.text())
+            title = label_for(target, own) or own
+        label = QLabel(label_text(tr(text, "label") if text and translate else text, title, target))
+        name = {CAPTION: "studioRibbonCaption", NOTE: "studioRibbonNote"}[kind]
+        label.setObjectName("studioRibbonDropdownCaption" if in_menu and kind == CAPTION else name)
+        if kind == CAPTION:
+            font = label.font()
+            font.setWeight(QFont.Weight.DemiBold)
+            label.setFont(font)
+        label.setForegroundRole(QPalette.ColorRole.PlaceholderText)
+        label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        if in_menu:
+            label.setContentsMargins(10, 4 if kind == CAPTION else 2, 10, 2)
+        else:
+            label.setContentsMargins(4, 0, 4, 0)
+            label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        return label
+
     def _fill_dropdown(self, menu, spec):
         """A dropdown's list as it opens: the commands and menus it names
         that exist now (a menu shows as a submenu, or its commands between
@@ -1646,9 +1761,15 @@ class StudioRibbon(QObject):
             if name == SEPARATOR:
                 menu.addSeparator()
                 continue
+            if not isinstance(name, str):
+                holder = QWidgetAction(menu)
+                holder.setDefaultWidget(self._label_widget(name, in_menu=True))
+                holder.setEnabled(False)
+                menu.addAction(holder)
+                continue
             source = item_menu(name)
             if source is not None:
-                self._add_contents(menu, source)
+                self._add_contents(menu, source, item_titled(name))
                 continue
             action = self._find(name)
             if action is None:
@@ -1659,10 +1780,11 @@ class StudioRibbon(QObject):
                     self._adopted.append(action)
             menu.addAction(action)
 
-    def _add_contents(self, menu, name):
+    def _add_contents(self, menu, name, titled=False):
         """Menu `name`'s commands, as it shows them now, into `menu` between
         lines (its own lines kept; widgets left out: they can be in one
-        menu only)."""
+        menu only); `titled`: under the menu's name, a caption that is not
+        clicked (style.qss QLabel#studioRibbonDropdownCaption)."""
         action = self._find(name)
         source = menu_of(action) if action is not None else None
         if source is None or sip.isdeleted(source):
@@ -1670,6 +1792,12 @@ class StudioRibbon(QObject):
         # Menus filled as they open (QGIS's recent projects...) fill now.
         source.aboutToShow.emit()
         menu.addSeparator()
+        if titled and clean(source.title()):
+            holder = QWidgetAction(menu)
+            holder.setDefaultWidget(self._label_widget((CAPTION, clean(source.title()), None), in_menu=True,
+                                                       translate=False))
+            holder.setEnabled(False)
+            menu.addAction(holder)
         for item in source.actions():
             if item.isSeparator():
                 menu.addSeparator()
