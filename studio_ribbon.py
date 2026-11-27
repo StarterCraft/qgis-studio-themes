@@ -236,6 +236,21 @@ def _label(kind, value, where):
     return kind, text, target
 
 
+def short_path_text(text):
+    """`text` with a file path in brackets at its end cut to its last folder
+    and file name: "Name (H:/a/b/Name.qgz)" -> "Name (…/b/Name.qgz)", with
+    the path's own separator."""
+    match = re.match(r"^(.*\()(.+)(\))$", text or "")
+    if not match:
+        return text
+    path = match.group(2)
+    separator = "\\" if "\\" in path else "/"
+    parts = [p for p in path.split(separator) if p]
+    if separator not in path or len(parts) <= 2:
+        return text
+    return f"{match.group(1)}…{separator}{separator.join(parts[-2:])}{match.group(3)}"
+
+
 def label_text(text, title, name):
     """A caption's or note's text with its variables filled: {title} the
     command's label, {id} its objectName; "{title}" without a text."""
@@ -1733,6 +1748,8 @@ class StudioRibbon(QObject):
             menu.setObjectName("studioRibbonDropdown")
             # Lines next to each other, or first or last, show as one or none.
             menu.setSeparatorsCollapsible(True)
+            # Shortened paths show in full as tooltips.
+            menu.setToolTipsVisible(True)
             menu.aboutToShow.connect(lambda menu=menu, spec=spec: self._fill_dropdown(menu, spec))
             action.setMenu(menu)
             self._dropdowns[spec] = action
@@ -1828,8 +1845,24 @@ class StudioRibbon(QObject):
             if item.isSeparator():
                 menu.addSeparator()
             elif item.isVisible() and not isinstance(item, QWidgetAction):
-                menu.addAction(item)
+                menu.addAction(self._short_path_action(item, menu))
         menu.addSeparator()
+
+    @staticmethod
+    def _short_path_action(item, menu):
+        """`item` itself, or, when its text ends in a file path in brackets
+        (QGIS's recent projects: "Name (H:/a/b/c/Name.qgz)"), a stand-in
+        with only the last folder and the file name, so the list stays
+        narrow; the full text is its tooltip, a click runs `item`."""
+        short = short_path_text(item.text())
+        if short == item.text():
+            return item
+        stand_in = QAction(item.icon(), short, menu)
+        stand_in.setToolTip(item.text())
+        stand_in.setStatusTip(item.text())
+        stand_in.setEnabled(item.isEnabled())
+        stand_in.triggered.connect(item.trigger)
+        return stand_in
 
     def _dropdown_button(self, parent, action, spec, kind):
         """A dropdown's button: its own command on its face and the list
