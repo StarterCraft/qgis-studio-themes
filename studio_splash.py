@@ -38,7 +38,7 @@ SPLASH_OWNED_SETTING = "studio_themes/themeSplashOwned"
 # Which picture splash.png holds now (see _write_image).
 SPLASH_STAMP_SETTING = "studio_themes/themeSplashStamp"
 # Raise when draw() changes, so drawn splashes are redrawn once.
-DRAW_VERSION = 2
+DRAW_VERSION = 3
 BUILTIN = ":/images/splash/splash.png"
 DEFAULT_SIZE = QSize(1977, 946)
 FONT = "Inter"
@@ -131,6 +131,10 @@ def draw(tokens, theme_name):
                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                f"Studio {theme_name}  ·  an OSGeo project")
     p.end()
+    # QGIS writes its loading messages in the inverse of the pixel at
+    # (width / 2, height - 8) (qgisapp.cpp, splashTextColor): black there
+    # makes them white. The pixel sits under the centred text.
+    image.setPixelColor(w // 2, h - 8, QColor(0, 0, 0))
     return image
 
 
