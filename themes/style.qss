@@ -76,12 +76,12 @@ QDockWidget > QWidget {
 }
 QDockWidget::title {
     background-color: @bg_dock;
-    padding: 10px 12px 6px 12px;
+    padding: 5px 6px 3px 6px;
     text-align: left;
 }
 QDockWidget QToolBar {
     background-color: @bg_dock;
-    padding: 2px 6px;
+    padding: 1px 3px;
 }
 QDockWidget::close-button,
 QDockWidget::float-button {
@@ -104,7 +104,7 @@ QStatusBar {
     color: @text_dim;
     border-top: 1px solid @divider;
     min-height: 30px;
-    padding: 2px 6px;
+    padding: 1px 3px;
 }
 /* Labels are dimmed and values (scale, coordinates, rotation, magnifier)
  * sit in rounded chips of one height with a light border, darker on hover
@@ -122,10 +122,10 @@ QStatusBar QAbstractSpinBox {
     border: 1px solid @divider;
     border-radius: 10px;
     min-height: 0;
-    padding: 1px 8px;
+    padding: 0px 4px;
 }
 QStatusBar QAbstractSpinBox {
-    padding-right: 20px;
+    padding-right: 10px;
 }
 QStatusBar QLineEdit:hover,
 QStatusBar QComboBox:hover,
@@ -139,10 +139,10 @@ QStatusBar QAbstractSpinBox:focus {
     background-color: @bg_base;
     border-width: 1px;
     border-color: @accent;
-    padding: 1px 8px;
+    padding: 0px 4px;
 }
 QStatusBar QAbstractSpinBox:focus {
-    padding-right: 20px;
+    padding-right: 10px;
 }
 QSizeGrip {
     width: 12px;
@@ -156,7 +156,7 @@ QSizeGrip {
 QMenuBar {
     background-color: @bg_window;
     border-bottom: 1px solid @line;
-    padding: 3px 6px;
+    padding: 2px 3px;
 }
 /* Main menu above the UI font (size filled in by the plugin);
  * the child selector outranks QGIS's own application-wide font rule. */
@@ -165,7 +165,7 @@ QMainWindow > QMenuBar {
 }
 QMenuBar::item {
     background: transparent;
-    padding: 5px @menu_item_padding_x;
+    padding: 2px @menu_item_padding_x;
     border-radius: @radius_sm;
 }
 QMenuBar::item:selected {
@@ -183,11 +183,11 @@ QMenuBar::item:pressed {
 QMenu {
     background-color: @bg_menu;
     border: 1px solid @menu_edge;
-    padding: 5px;
+    padding: 2px;
 }
 QMenu::item {
     background: transparent;
-    padding: 6px 28px 6px 10px;
+    padding: 3px 14px 3px 5px;
     border-radius: @radius_sm;
 }
 QMenu::item:selected {
@@ -199,16 +199,16 @@ QMenu::item:disabled {
     background: transparent;
 }
 QMenu::icon {
-    padding-left: 8px;
+    padding-left: 4px;
 }
 QMenu::separator {
     height: 1px;
     background-color: @menu_border;
-    margin: 5px 6px;
+    margin: 2px 3px;
 }
 QMenu::section {
     color: @text_dim;
-    padding: 6px 10px 4px 10px;
+    padding: 3px 5px 2px 5px;
     font-weight: 600;
 }
 /* A ribbon dropdown's caption above a menu's commands (studio_ribbon
@@ -234,12 +234,12 @@ QMenu::right-arrow {
     image: url(@theme_path/icons/studio/chevron-right.svg);
     width: 12px;
     height: 12px;
-    margin-right: 6px;
+    margin-right: 3px;
 }
 QMenu::indicator {
     width: 14px;
     height: 14px;
-    margin-left: 8px;
+    margin-left: 4px;
     border-radius: @radius_sm;
 }
 /* Checked menu items: the mark alone, in the accent colour, not a filled
@@ -254,8 +254,8 @@ QMenu::indicator:exclusive:checked {
 QToolBar {
     background-color: @bg_window;
     border: none;
-    padding: 3px 4px;
-    spacing: 2px;
+    padding: 2px 2px;
+    spacing: 1px;
 }
 QToolBar::handle {
     background: transparent;
@@ -283,9 +283,9 @@ QgsBrowserTreeView::item,
 QTreeWidget#studioSourceTree::item,
 QgsLayerTreeView::item,
 QgsProcessingToolboxTreeView::item {
-    padding-top: 4px;
-    padding-bottom: 4px;
-    margin-right: 6px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    margin-right: 3px;
     border-radius: @radius;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
@@ -424,7 +424,7 @@ QToolBar::separator {
     background-color: @divider;
     width: 1px;
     height: 1px;
-    margin: 6px 5px;
+    margin: 3px 2px;
 }
 /* Spin boxes and combo boxes in toolbars (snapping tolerance and units,
  * scale) share one height, so their edges line up. */
@@ -437,10 +437,10 @@ QToolBar QAbstractSpinBox {
 QToolBar QComboBox:focus,
 QToolBar QAbstractSpinBox:focus {
     border-width: 1px;
-    padding: @control_padding_y 8px;
+    padding: @control_padding_y 4px;
 }
 QToolBar QAbstractSpinBox:focus {
-    padding-right: 20px;
+    padding-right: 10px;
 }
 /* Toolbar names (studio_toolbars.py). A docked horizontal toolbar gets a
  * title strip above its buttons ("top") or a thinner one below them, where
@@ -471,7 +471,7 @@ QToolButton#qt_toolbar_ext_button {
     background: transparent;
     border: none;
     border-radius: @radius_sm;
-    padding: 2px;
+    padding: 1px;
 }
 QToolBar::extension-button:hover,
 QToolButton#qt_toolbar_ext_button:hover {
@@ -670,7 +670,7 @@ QToolButton {
     background: transparent;
     border: none;
     border-radius: @radius;
-    padding: 3px;
+    padding: 2px;
 }
 QToolButton:hover {
     background-color: @tool_hover;
@@ -689,10 +689,10 @@ QToolButton:disabled {
     color: @text_disabled;
 }
 QToolButton[popupMode="1"] {
-    padding-right: 16px;
+    padding-right: 8px;
 }
 QToolButton[popupMode="2"] {
-    padding-right: 12px;
+    padding-right: 6px;
 }
 QToolButton::menu-button {
     border: none;
@@ -734,7 +734,7 @@ QPushButton {
     background-color: @control_bg;
     border: 1px solid @button_border;
     border-radius: @radius;
-    padding: @control_padding_y 14px;
+    padding: @control_padding_y 7px;
     min-height: 18px;
 }
 QPushButton:hover {
@@ -783,7 +783,7 @@ QPushButton::menu-indicator {
 }
 QgsExpressionBuilderWidget QPushButton {
     min-width: 20px;
-    padding: 4px 6px;
+    padding: 2px 3px;
 }
 
 /* =========================================================================
@@ -803,12 +803,12 @@ QComboBox {
 }
 QLineEdit,
 QAbstractSpinBox {
-    padding: @control_padding_y 8px;
+    padding: @control_padding_y 4px;
     min-height: 18px;
 }
 QTextEdit,
 QPlainTextEdit {
-    padding: 2px;
+    padding: 1px;
 }
 QLineEdit:hover,
 QAbstractSpinBox:hover,
@@ -844,7 +844,7 @@ QLineEdit:read-only {
 }
 
 QAbstractSpinBox {
-    padding-right: 20px;
+    padding-right: 10px;
 }
 /* The text field inside spin boxes and editable combo boxes: plain text.
  * The field rules above would give it its own padding, minimum height and
@@ -874,12 +874,12 @@ QAbstractSpinBox::down-button {
 }
 QAbstractSpinBox::up-button {
     subcontrol-position: top right;
-    margin: 2px 2px 0 0;
+    margin: 1px 1px 0 0;
     border-top-right-radius: @radius_sm;
 }
 QAbstractSpinBox::down-button {
     subcontrol-position: bottom right;
-    margin: 0 2px 2px 0;
+    margin: 0 1px 1px 0;
     border-bottom-right-radius: @radius_sm;
 }
 QAbstractSpinBox::up-button:hover,
@@ -914,7 +914,7 @@ QAbstractSpinBox::down-arrow:off {
  * current item covers the field, which clipped short lists such as the
  * labelling mode into a scroll area), drawn with the item rules below. */
 QComboBox {
-    padding: @control_padding_y 8px;
+    padding: @control_padding_y 4px;
     min-height: 18px;
     combobox-popup: 0;
 }
@@ -947,14 +947,14 @@ QComboBoxPrivateContainer > QAbstractItemView {
     color: @text;
     border: 1px solid @menu_edge;
     border-radius: 0;
-    padding: 4px;
+    padding: 2px;
     outline: none;
     selection-background-color: @menu_hover;
     selection-color: @text_bright;
 }
 /* Rows as dense as the sub-page lists (Labels, Diagrams): 28 px. */
 QComboBoxPrivateContainer > QAbstractItemView::item {
-    padding: 3px 8px;
+    padding: 2px 4px;
     min-height: 18px;
     border-radius: @radius_sm;
 }
@@ -990,7 +990,7 @@ QHeaderView {
 QHeaderView::section {
     background-color: @header_bg;
     color: @text_dim;
-    padding: 5px 8px;
+    padding: 2px 4px;
     border: none;
     border-right: 1px solid @divider;
     border-bottom: 1px solid @divider;
@@ -1021,7 +1021,7 @@ QgsAttributeTableView > QHeaderView::section:vertical {
     font-weight: normal;
     border-right: 1px solid @grid;
     border-bottom: 1px solid @grid;
-    padding: 0 8px;
+    padding: 0 4px;
 }
 QgsAttributeTableView > QTableCornerButton::section {
     background-color: @bg_base;
@@ -1041,7 +1041,7 @@ QTableWidget#mAttributeActionTable {
 QTableWidget#mFieldsList::item,
 QTableWidget#mAttributeActionTable::item {
     border-bottom: 1px solid @grid;
-    padding: 0 4px;
+    padding: 0 2px;
 }
 QTableWidget#mFieldsList::item:selected,
 QTableWidget#mAttributeActionTable::item:selected {
@@ -1074,13 +1074,13 @@ QgsAttributeTableView QLineEdit:focus,
 QgsAttributeTableView QComboBox:focus,
 QgsAttributeTableView QAbstractSpinBox:focus {
     min-height: 0;
-    padding: 0 4px;
+    padding: 0 2px;
     border-width: 1px;
     border-radius: 0;
 }
 QgsAttributeTableView QAbstractSpinBox,
 QgsAttributeTableView QAbstractSpinBox:focus {
-    padding-right: 20px;
+    padding-right: 10px;
 }
 QHeaderView::up-arrow {
     image: url(@theme_path/icons/studio/arrow-up.svg);
@@ -1113,8 +1113,8 @@ QTabBar::tab {
     background: transparent;
     color: @text_dim;
     border: none;
-    padding: 6px 12px;
-    margin: 0 2px;
+    padding: 3px 6px;
+    margin: 0 1px;
 }
 QTabBar::tab:top {
     border-bottom: 2px solid transparent;
@@ -1124,11 +1124,11 @@ QTabBar::tab:bottom {
 }
 QTabBar::tab:left {
     border-right: 2px solid transparent;
-    padding: 8px 8px;
+    padding: 4px 4px;
 }
 QTabBar::tab:right {
     border-left: 2px solid transparent;
-    padding: 8px 8px;
+    padding: 4px 4px;
 }
 QTabBar::tab:hover {
     color: @text;
@@ -1174,7 +1174,7 @@ QMainWindow > QTabBar::tab:bottom {
     border: none;
     border-radius: 0;
     margin: 0;
-    padding: 5px 12px;
+    padding: 2px 6px;
     color: @text_dim;
 }
 QMainWindow > QTabBar::tab:bottom {
@@ -1230,11 +1230,11 @@ QScrollBar::handle {
 }
 QScrollBar::handle:vertical {
     min-height: 32px;
-    margin: 2px 3px;
+    margin: 1px 2px;
 }
 QScrollBar::handle:horizontal {
     min-width: 32px;
-    margin: 3px 2px;
+    margin: 2px 1px;
 }
 QScrollBar::handle:hover,
 QScrollBar::handle:pressed {
@@ -1243,11 +1243,11 @@ QScrollBar::handle:pressed {
 }
 QScrollBar::handle:vertical:hover,
 QScrollBar::handle:vertical:pressed {
-    margin: 2px 1px;
+    margin: 1px 0px;
 }
 QScrollBar::handle:horizontal:hover,
 QScrollBar::handle:horizontal:pressed {
-    margin: 1px 2px;
+    margin: 0px 1px;
 }
 QScrollBar::add-line,
 QScrollBar::sub-line {
@@ -1271,12 +1271,12 @@ QAbstractScrollArea::corner {
 QCheckBox,
 QRadioButton {
     background: transparent;
-    spacing: 8px;
+    spacing: 4px;
 }
 /* Room after a radio button's label, so a row of choices (Data Source
  * Manager: File, Directory, Database...) does not run together. */
 QRadioButton {
-    padding-right: 6px;
+    padding-right: 3px;
 }
 /* 16 px in all with the border: QGIS lays some rows out at the native
  * indicator height (16 px, e.g. Draw effects), which clipped the top of
@@ -1352,8 +1352,8 @@ QgsCollapsibleGroupBoxBasic {
     border: none;
     border-top: 1px solid @divider;
     border-radius: 0;
-    margin-top: 22px;
-    padding: 8px 0 2px 0;
+    margin-top: 11px;
+    padding: 4px 0 1px 0;
 }
 /* Titles in the panel titles' voice: the text colour, semibold and a step
  * above the content (sizes filled in by the plugin), in their own case;
@@ -1362,7 +1362,7 @@ QGroupBox::title {
     subcontrol-origin: margin;
     subcontrol-position: top left;
     left: 0;
-    padding: 0 4px 0 0;
+    padding: 0 2px 0 0;
     color: @text;
     font-size: @section_font_size;
     font-weight: 600;
@@ -1429,10 +1429,10 @@ QSlider::handle:vertical {
     border-radius: 8px;
 }
 QSlider::handle:horizontal {
-    margin: -6px 0;
+    margin: -3px 0;
 }
 QSlider::handle:vertical {
-    margin: 0 -6px;
+    margin: 0 -3px;
 }
 QSlider::handle:hover {
     border-color: @accent_hover;
@@ -1442,7 +1442,7 @@ QToolTip {
     background-color: @bg_menu;
     color: @text;
     border: 1px solid @menu_edge;
-    padding: 2px 2px;
+    padding: 1px 1px;
     border-bottom-left-radius: @radius;
     border-bottom-right-radius: @radius;
 }
@@ -1477,8 +1477,8 @@ QDockWidget QgsFilterLineEdit {
     background-color: @bg_base;
     border-color: @field_border;
     border-radius: @search_radius;
-    padding-left: 4px;
-    padding-right: 10px;
+    padding-left: 2px;
+    padding-right: 5px;
 }
 QDockWidget QgsFilterLineEdit:hover {
     border-color: @field_border_hover;
@@ -1490,7 +1490,7 @@ QDockWidget QgsFilterLineEdit:focus {
  * Filter by Expression), so the Layers panel's row of QGIS's buttons and
  * List by Data Source fits a panel of about 320 px. */
 QDockWidget QToolBar QToolButton[popupMode="1"] {
-    padding-right: 11px;
+    padding-right: 6px;
 }
 QDockWidget QToolBar QToolButton::menu-button {
     width: 10px;
@@ -1501,7 +1501,7 @@ QgsColorRampButton {
     background-color: @bg_base;
     border: 1px solid @field_border;
     border-radius: @radius;
-    padding: 2px;
+    padding: 1px;
     min-height: 18px;
 }
 QgsColorButton:hover,
@@ -1512,7 +1512,7 @@ QgsPropertyOverrideButton {
     background: transparent;
     border: 1px solid transparent;
     border-radius: @radius_sm;
-    padding: 2px;
+    padding: 1px;
 }
 QgsPropertyOverrideButton:hover {
     background-color: @tool_hover;
@@ -1532,12 +1532,12 @@ QgsCodeEditor {
 /* The page side: its buttons (OK, Cancel, Apply, Help) and the page kept
  * clear of the window's right and bottom edges (QGIS leaves 3 px). */
 QgsOptionsDialogBase QFrame#mOptionsFrame {
-    padding: 0 6px 6px 0;
+    padding: 0 3px 3px 0;
 }
 QgsOptionsDialogBase QFrame#mOptionsListFrame {
     border: none;
     border-right: 1px solid @divider;
-    padding: 8px 8px 0 8px;
+    padding: 4px 4px 0 4px;
 }
 QListWidget#mOptionsListWidget,
 QListWidget#mOptListWidget,
@@ -1547,7 +1547,7 @@ QgsOptionsTreeView {
     background-color: @bg_window;
     border: none;
     border-radius: 0;
-    padding: 4px 2px;
+    padding: 2px 1px;
 }
 /* Narrow horizontal padding: when a dialog is too narrow, QGIS collapses
  * this list to an icon-only column, which wider padding pushed the icons
@@ -1562,8 +1562,8 @@ QListWidget#mOptListWidget::item,
 QListView#mOptionsListWidget::item,
 QTreeView#mOptionsTreeView::item,
 QgsOptionsTreeView::item {
-    padding: 5px 6px;
-    margin: 1px 4px 1px 0;
+    padding: 2px 3px;
+    margin: 0px 2px 0px 0;
     border-radius: @radius;
 }
 QListWidget#mOptionsListWidget::item:hover,
@@ -1591,7 +1591,7 @@ QListWidget#mDiagramOptionsListWidget::item:selected {
  * the item left the indentation as a separate block beside it). */
 QTreeView#mOptionsTreeView::item,
 QgsOptionsTreeView::item {
-    margin: 0 4px 0 0;
+    margin: 0 2px 0 0;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
 }
@@ -1614,8 +1614,8 @@ QListWidget#mDiagramOptionsListWidget {
 }
 QListWidget#mLabelingOptionsListWidget::item,
 QListWidget#mDiagramOptionsListWidget::item {
-    padding: 4px;
-    margin: 0 4px 1px 0;
+    padding: 2px;
+    margin: 0 2px 0px 0;
     border-radius: @radius;
 }
 
@@ -1625,14 +1625,14 @@ QgsDevToolsPanelWidget QListWidget#mOptionsListWidget {
     background-color: @bg_window;
     border: none;
     border-right: 1px solid @divider;
-    padding: 4px;
+    padding: 2px;
     /* A minimum only: the rail can be widened or narrowed. */
     min-width: 48px;
 }
 QgsLayerStylingWidget QListWidget#mOptionsListWidget::item,
 QgsDevToolsPanelWidget QListWidget#mOptionsListWidget::item {
-    padding: 6px 0 6px 6px;
-    margin: 1px 0;
+    padding: 3px 0 3px 3px;
+    margin: 0px 0;
     min-height: 28px;
     border-radius: @radius;
 }
@@ -1642,10 +1642,10 @@ QgsDevToolsPanelWidget QListWidget#mOptionsListWidget::item {
  * padding, native checkboxes): room around them on the list instead, so
  * the checkboxes keep clear of its border. */
 QListView#vwPlugins {
-    padding: 4px 0 4px 8px;
+    padding: 2px 0 2px 4px;
 }
 QListView#vwPlugins::item {
-    padding: 6px 8px;
+    padding: 3px 4px;
     border-bottom: 1px solid @divider;
     border-radius: 0;
     min-height: 28px;
