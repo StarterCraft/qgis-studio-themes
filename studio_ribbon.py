@@ -77,7 +77,7 @@ BODY = ROWS * ROW_HEIGHT + (ROWS - 1) * ROW_SPACING
 LARGE_MIN_WIDTH = 56
 # A large button's room besides its icon and two label lines: its padding
 # (style.qss) and the gap Qt leaves under the icon.
-LABEL_ROOM = 7
+LABEL_ROOM = 11
 # The height of a two-line label in the UI font at the default size.
 DEFAULT_LABEL = 30
 # One label line (set_sizes): a large button with a one-line label moves its
@@ -86,7 +86,7 @@ DEFAULT_LABEL = 30
 LABEL_LINE = DEFAULT_LABEL // 2
 # style.qss's padding above and below a large button's icon and label, per
 # density (QToolButton[studioRibbon="large"]).
-LARGE_PADDING = {"standard": (4, 3), "compact": (3, 2)}
+LARGE_PADDING = {"standard": (6, 5), "compact": (5, 4)}
 # Room around a group's buttons (left, top, right, bottom), per density:
 # compact keeps less space above and below them, but enough that the icons
 # and names do not touch the page's edges.
@@ -120,14 +120,14 @@ def ribbon_sizes(toolbar, compact=False, label=DEFAULT_LABEL):
     """(small icon, large icon, row height, row spacing, large button
     minimum width) for a toolbar icon size `toolbar`: small buttons a sixth
     smaller than a toolbar's (on a 4 px step, never below 16), large ones
-    12 px larger (8 for the smallest), rows 4 px taller than their icons
-    (2 px when `compact`). The rows are set further apart where a large
+    12 px larger (8 for the smallest), rows 8 px taller than their icons
+    (6 px when `compact`). The rows are set further apart where a large
     button's icon and two-line label (`label` px high, by the UI font) need
     more than their height, so a label is never cut short. 16 gives 16, 24
-    and 20; 24 gives 20, 32 and 24; 32 gives 28, 40 and 32."""
+    and 24; 24 gives 20, 32 and 28; 32 gives 28, 40 and 36."""
     small = max(16, round(toolbar * 5 / 6 / 4) * 4)
     large = small + (12 if small >= 20 else 8)
-    row = small + (2 if compact else 4)
+    row = small + (6 if compact else 8)
     need = large + LABEL_ROOM + label
     spacing = max(SPACING, -(-(need - ROWS * row) // (ROWS - 1)))
     return small, large, row, spacing, large + 24
