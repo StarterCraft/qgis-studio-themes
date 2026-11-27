@@ -1097,8 +1097,12 @@
         <translation>Перетащите, чтобы получить кнопку, открывающую это меню</translation>
     </message>
     <message>
-        <source>A button. Tick Large in the tree for a large one.</source>
-        <translation>Кнопка. Отметьте «Крупная» в дереве, чтобы сделать её крупной.</translation>
+        <source>A button. Tick Large in the tree for a large one; Labelled to keep its label in an icon-only group.</source>
+        <translation>Кнопка. Отметьте «Крупная» в дереве, чтобы сделать её крупной, или «С подписью», чтобы сохранить подпись в группе из одних значков.</translation>
+    </message>
+    <message>
+        <source>Labelled</source>
+        <translation>С подписью</translation>
     </message>
     <message>
         <source>Every button of this toolbar that no group names, in its order, also those plugins add to it later.</source>

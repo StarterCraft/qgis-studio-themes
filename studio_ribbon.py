@@ -167,14 +167,13 @@ COMPACT_BAR_TOP = 2
 # groups) large labelled buttons for up to AUTO_LARGE actions, else icons.
 LABELS, ICONS, AUTO = "labels", "icons", "auto"
 AUTO_LARGE = 3
-# The most used commands of icon-only groups: labelled small buttons, in
-# their own column(s) before the group's other (icon-only) buttons.
-LABELLED_SMALL = frozenset(("mActionZoomIn", "mActionZoomOut", "mActionZoomFullExtent"))
 # The tabs, in order: the profile's own ribbon.yaml (USER_TABS_FILE, saved
 # by the ribbon editor, studio_ribbon_editor) when there is one and it reads,
 # else the plugin's (TABS_FILE); read once, at startup. Their header
 # describes the format. Read into (title, groups). A group: (title, sources,
-# large, layout[, rows]). Sources are (toolbar objectName, action
+# large, layout, rows or None, labelled): labelled names the buttons of an
+# icons or auto group shown small with their label, in their own column(s)
+# before its other (icon-only) buttons. Sources are (toolbar objectName, action
 # objectNames, or None for those of the toolbar no group names); ("@",
 # objectNames) for actions of the main window not on a toolbar or menus;
 # ("menu", menu objectNames) for what those menus hold that the ribbon has
@@ -329,12 +328,13 @@ def _group(group, where="ribbon.yaml"):
     sources = group.get("sources") or []
     if not isinstance(sources, list):
         raise ValueError(f"{where}: sources: expected a list")
-    item = (group["title"], tuple(_source(s, where) for s in sources),
-            _names(group.get("large") or [], f"{where}: large"), layout)
     rows = group.get("rows")
     if rows and (not isinstance(rows, list) or not all(isinstance(r, list) for r in rows)):
         raise ValueError(f"{where}: rows: expected a list of lists of objectNames")
-    return item + (tuple(_names(row, f"{where}: rows") for row in rows),) if rows else item
+    return (group["title"], tuple(_source(s, where) for s in sources),
+            _names(group.get("large") or [], f"{where}: large"), layout,
+            tuple(_names(row, f"{where}: rows") for row in rows) if rows else None,
+            frozenset(_names(group.get("labelled") or [], f"{where}: labelled")))
 
 
 def parse_tabs(data):
@@ -1627,8 +1627,7 @@ class StudioRibbon(QObject):
         return [(a, t) for a, t in found if a.isVisible()]
 
     def _group(self, parent, spec, toolbars, seen):
-        title, sources, large_names, layout_kind = spec[:4]
-        rows = spec[4] if len(spec) > 4 else None
+        title, sources, large_names, layout_kind, rows, labelled_names = spec
         entries = self._actions(sources, toolbars, seen)
         if not entries:
             return None
@@ -1645,7 +1644,7 @@ class StudioRibbon(QObject):
         labelled = []
         for action, toolbar in entries:
             large = large_all or _key(action) in large_names
-            first = layout_kind != LABELS and _key(action) in LABELLED_SMALL
+            first = layout_kind != LABELS and _key(action) in labelled_names
             widget = self._widget(group, action, toolbar, "large" if large else (
                 "small" if layout_kind == LABELS or first else "icon"))
             if widget is None:

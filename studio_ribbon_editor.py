@@ -97,6 +97,8 @@ def entry_key(entry):
     if entry["kind"] == DROP:
         return entry.get("action") or entry.get("title")
     return None
+# The tree's tick columns: the group's list each one sets.
+TICKS = {2: "large", 3: "labelled"}
 # Lists of names written on one line up to this width.
 LINE_WIDTH = 100
 
@@ -112,7 +114,7 @@ def _t(text):
 
 def tabs_from_data(data):
     """ribbon.yaml's parsed `data` as [{"title", "groups": [{"title",
-    "layout", "large", "rows", "entries": [entry]}]}]; an entry is {"kind":
+    "layout", "large", "labelled", "rows", "entries": [entry]}]}]; an entry is {"kind":
     CMD, "name", "toolbar" (or None)}, {"kind": REST, "toolbar"},
     {"kind": MENU, "name"} or {"kind": DROP, "action", "title" (either may
     be None), "items": [names]}."""
@@ -139,7 +141,8 @@ def tabs_from_data(data):
                     entries += [label_entry(k, source[k]) for k in LABEL_KINDS if k in source][:1]
             groups.append({
                 "title": group["title"], "layout": group.get("layout", studio_ribbon.LABELS),
-                "large": list(group.get("large") or ()), "rows": [list(r) for r in group.get("rows") or ()],
+                "large": list(group.get("large") or ()), "labelled": list(group.get("labelled") or ()),
+                "rows": [list(r) for r in group.get("rows") or ()],
                 "entries": entries,
             })
         tabs.append({"title": tab["title"], "groups": groups})
@@ -180,6 +183,8 @@ def data_from_tabs(tabs):
             item = {"title": group["title"], "sources": sources}
             if group.get("large"):
                 item["large"] = list(dict.fromkeys(group["large"]))
+            if group.get("labelled"):
+                item["labelled"] = list(dict.fromkeys(group["labelled"]))
             item["layout"] = group.get("layout") or studio_ribbon.LABELS
             rows = [list(r) for r in group.get("rows") or () if r]
             if rows:
@@ -257,6 +262,8 @@ def dump(data, head=None):
                     _names(lines, "          ", f"- {key}", source[key])
             if group.get("large"):
                 _names(lines, "        ", "large", group["large"])
+            if group.get("labelled"):
+                _names(lines, "        ", "labelled", group["labelled"])
             lines.append(f"        layout: {group['layout']}")
             if group.get("rows"):
                 lines.append("        rows:")
@@ -517,7 +524,7 @@ class _RibbonTree(QTreeWidget):
     def __init__(self, make_entry, parent=None):
         super().__init__(parent)
         self._make_entry = make_entry
-        self.setHeaderLabels([_t("Ribbon"), _t("Name / source"), _t("Large")])
+        self.setHeaderLabels([_t("Ribbon"), _t("Name / source"), _t("Large"), _t("Labelled")])
         self.setDragEnabled(True)
         self.setAcceptDrops(True)
         self.setDropIndicatorShown(True)
@@ -527,6 +534,7 @@ class _RibbonTree(QTreeWidget):
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setUniformRowHeights(True)
         self.header().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        self.header().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         _share_columns(self, (0.55,))
         self.itemDoubleClicked.connect(self._double_clicked)
 
@@ -1346,6 +1354,13 @@ class RibbonEditorDialog(QDialog):
 
     # ---- The tree -----------------------------------------------------------
 
+    @staticmethod
+    def _show_ticks(item, group, key):
+        """An entry's Large and Labelled ticks, from its group's lists."""
+        data = (group.data(0, ROLE) or {}) if group is not None else {}
+        for column, name in TICKS.items():
+            item.setCheckState(column, Qt.CheckState.Checked if key in data.get(name, ()) else Qt.CheckState.Unchecked)
+
     def _make_entry(self, entry, group=None):
         """A tree item for `entry` (see tabs_from_data); a dropdown's list
         becomes its children."""
@@ -1372,8 +1387,7 @@ class RibbonEditorDialog(QDialog):
                 item.setIcon(0, icon)
             flags |= Qt.ItemFlag.ItemIsUserCheckable
             item.setFlags(flags)
-            large = group is not None and name in (group.data(0, ROLE) or {}).get("large", ())
-            item.setCheckState(2, Qt.CheckState.Checked if large else Qt.CheckState.Unchecked)
+            self._show_ticks(item, group, name)
             found = catalog.found(name)
         elif entry["kind"] == DROP:
             entry = {k: entry.get(k) for k in ("kind", "action", "title")}
@@ -1382,8 +1396,7 @@ class RibbonEditorDialog(QDialog):
             item.setFlags(flags)
             self._show_dropdown(item)
             key = entry_key(entry)
-            large = group is not None and key in (group.data(0, ROLE) or {}).get("large", ())
-            item.setCheckState(2, Qt.CheckState.Checked if large else Qt.CheckState.Unchecked)
+            self._show_ticks(item, group, key)
             for name in item_names:
                 if isinstance(name, dict):
                     kind = next(iter(name))
@@ -1514,7 +1527,7 @@ class RibbonEditorDialog(QDialog):
             tree.addTopLevelItem(tab_item)
             for group in tab["groups"]:
                 data = {"kind": "group", "layout": group["layout"], "large": list(group["large"]),
-                        "rows": group["rows"]}
+                        "labelled": list(group.get("labelled") or ()), "rows": group["rows"]}
                 group_item = self._make_container(group["title"], data)
                 tab_item.addChild(group_item)
                 for entry in group["entries"]:
@@ -1535,7 +1548,9 @@ class RibbonEditorDialog(QDialog):
                 data = group.data(0, ROLE)
                 shown = set(self._candidates(group, explicit))
                 large = [n for n in data["large"] if n in shown or not self._catalog.found(n)]
+                labelled = [n for n in data.get("labelled", ()) if n in shown or not self._catalog.found(n)]
                 groups.append({"title": group.text(0).strip(), "layout": data["layout"], "large": large,
+                               "labelled": labelled,
                                "rows": data["rows"], "entries": [self._entry_of(c) for c in _children(group)]})
             tabs.append({"title": tab.text(0).strip(), "groups": groups})
         return tabs
@@ -1630,7 +1645,7 @@ class RibbonEditorDialog(QDialog):
             return
         current = self._current_group()
         index = tab.indexOfChild(current) + 1 if current is not None and current.parent() is tab else tab.childCount()
-        data = {"kind": "group", "layout": studio_ribbon.LABELS, "large": [], "rows": []}
+        data = {"kind": "group", "layout": studio_ribbon.LABELS, "large": [], "labelled": [], "rows": []}
         item = self._make_container(self._unique("New Group", _children(tab)), data)
         tab.insertChild(index, item)
         tab.setExpanded(True)
@@ -1729,13 +1744,14 @@ class RibbonEditorDialog(QDialog):
             self._syncing = False
             if self._tree.currentItem() is item and self._title.text() != item.text(0):
                 self._title.setText(item.text(0))
-        elif column == 2 and depth == ENTRY and entry_key(item.data(0, ROLE)):
+        elif column in TICKS and depth == ENTRY and entry_key(item.data(0, ROLE)):
+            key = TICKS[column]
             data = item.parent().data(0, ROLE)
             name = entry_key(item.data(0, ROLE))
-            large = [n for n in data["large"] if n != name]
-            if item.checkState(2) == Qt.CheckState.Checked:
-                large.append(name)
-            data["large"] = large
+            names = [n for n in data.get(key, ()) if n != name]
+            if item.checkState(column) == Qt.CheckState.Checked:
+                names.append(name)
+            data[key] = names
             item.parent().setData(0, ROLE, data)
             if self._tree.currentItem() in (item, item.parent()):
                 self._show_properties(self._tree.currentItem())
@@ -1819,7 +1835,7 @@ class RibbonEditorDialog(QDialog):
                 "An item of the dropdown's list. Drag it onto a group to make it a button again."))
             return
         texts = {
-            CMD: _t("A button. Tick Large in the tree for a large one."),
+            CMD: _t("A button. Tick Large in the tree for a large one; Labelled to keep its label in an icon-only group."),
             REST: _t("Every button of this toolbar that no group names, in its order, also those plugins add to it later."),
             MENU: _t("Every command of this menu the ribbon shows nowhere else, also those plugins add to it later."),
         }
@@ -1981,8 +1997,10 @@ class RibbonEditorDialog(QDialog):
         new = entry_key(entry)
         group = item.parent()
         data = group.data(0, ROLE)
-        if old in data["large"] and new != old:
-            data["large"] = [new if n == old else n for n in data["large"] if n != new]
+        if new != old and any(old in data.get(k, ()) for k in TICKS.values()):
+            for k in TICKS.values():
+                if old in data.get(k, ()):
+                    data[k] = [new if n == old else n for n in data[k] if n != new]
             group.setData(0, ROLE, data)
         self._syncing = True
         item.setData(0, ROLE, entry)

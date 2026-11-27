@@ -27,6 +27,8 @@
 #         text: optional (default "{title}"); {title} is the label of the command or menu
 #         named in for:, {id} its objectName; for: optional. Plain text: caption: "<text>"
 #   large:   objectNames shown as large buttons (optional; a dropdown by its action, else title)
+#   labelled: objectNames shown small with their label in an icons or auto group, in a
+#            column of their own before its icon-only buttons (optional)
 #   layout:  labels | icons | auto   (auto: plugins' groups; large labelled buttons
 #            for up to 3 actions, else icons)
 #   rows:    explicit rows of small buttons, lists of objectNames (optional)
@@ -108,6 +110,7 @@ tabs:
               - "mActionZoomNext"
               - "mActionDraw"
         large: ["mActionPan"]
+        labelled: ["mActionZoomIn", "mActionZoomOut", "mActionZoomFullExtent"]
         layout: icons
       - title: "Select"
         sources:

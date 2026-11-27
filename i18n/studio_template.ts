@@ -1097,7 +1097,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>A button. Tick Large in the tree for a large one.</source>
+        <source>A button. Tick Large in the tree for a large one; Labelled to keep its label in an icon-only group.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Labelled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
