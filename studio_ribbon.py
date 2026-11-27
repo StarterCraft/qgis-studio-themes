@@ -190,6 +190,15 @@ PLUGIN_TAB = "Plugins"
 # draws a line.
 DROPDOWN = "dropdown"
 SEPARATOR = "-"
+# A menu's name with CONTENTS after it, in a dropdown's items: the menu's
+# own commands in the list itself, between lines, not as a submenu (e.g.
+# the recent projects in Open's list).
+CONTENTS = "/*"
+
+
+def item_menu(name):
+    """The menu a dropdown item `name` shows the contents of, or None."""
+    return name[:-len(CONTENTS)] if name.endswith(CONTENTS) and len(name) > len(CONTENTS) else None
 
 
 def user_tabs_file():
@@ -935,7 +944,7 @@ class StudioRibbon(QObject):
                             self._menu_tabs.setdefault(name, set()).add(index)
                         continue
                     if source == DROPDOWN:
-                        held = {n for n in (names[0],) + names[2] if n and n != SEPARATOR}
+                        held = {item_menu(n) or n for n in (names[0],) + names[2] if n and n != SEPARATOR}
                         self._dropdown_names |= held
                         self._placed_names |= held
                         continue
@@ -1619,6 +1628,8 @@ class StudioRibbon(QObject):
             action.setObjectName(name or title)
             menu = QMenu(self._window)
             menu.setObjectName("studioRibbonDropdown")
+            # Lines next to each other, or first or last, show as one or none.
+            menu.setSeparatorsCollapsible(True)
             menu.aboutToShow.connect(lambda menu=menu, spec=spec: self._fill_dropdown(menu, spec))
             action.setMenu(menu)
             self._dropdowns[spec] = action
@@ -1628,11 +1639,16 @@ class StudioRibbon(QObject):
 
     def _fill_dropdown(self, menu, spec):
         """A dropdown's list as it opens: the commands and menus it names
-        that exist now (a menu shows as a submenu), lines for SEPARATOR."""
+        that exist now (a menu shows as a submenu, or its commands between
+        lines for a name ending in CONTENTS), lines for SEPARATOR."""
         menu.clear()
         for name in spec[2]:
             if name == SEPARATOR:
                 menu.addSeparator()
+                continue
+            source = item_menu(name)
+            if source is not None:
+                self._add_contents(menu, source)
                 continue
             action = self._find(name)
             if action is None:
@@ -1642,6 +1658,24 @@ class StudioRibbon(QObject):
                 if fallback is not None and self._icons.adopt(action, fallback):
                     self._adopted.append(action)
             menu.addAction(action)
+
+    def _add_contents(self, menu, name):
+        """Menu `name`'s commands, as it shows them now, into `menu` between
+        lines (its own lines kept; widgets left out: they can be in one
+        menu only)."""
+        action = self._find(name)
+        source = menu_of(action) if action is not None else None
+        if source is None or sip.isdeleted(source):
+            return
+        # Menus filled as they open (QGIS's recent projects...) fill now.
+        source.aboutToShow.emit()
+        menu.addSeparator()
+        for item in source.actions():
+            if item.isSeparator():
+                menu.addSeparator()
+            elif item.isVisible() and not isinstance(item, QWidgetAction):
+                menu.addAction(item)
+        menu.addSeparator()
 
     def _dropdown_button(self, parent, action, spec, kind):
         """A dropdown's button: its own command on its face and the list

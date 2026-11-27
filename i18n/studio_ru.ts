@@ -1361,10 +1361,6 @@
         <translation>Сначала выберите выпадающий список или его пункт.</translation>
     </message>
     <message>
-        <source>Its list: drop commands or menus (submenus) on it, Add Line for a line. With a command, the button runs it and its arrow opens the list; without one, the button opens the list.</source>
-        <translation>Его список: перетащите на него команды или меню (станут подменю), «Добавить линию» — линия. С командой кнопка выполняет её, а стрелка открывает список; без команды кнопка открывает список.</translation>
-    </message>
-    <message>
         <source>dropdown</source>
         <translation>выпадающий список</translation>
     </message>
@@ -1387,6 +1383,30 @@
     <message>
         <source>command</source>
         <translation>команда</translation>
+    </message>
+    <message>
+        <source>Its commands right in the list, between lines (not a submenu)</source>
+        <translation>Его команды прямо в списке, между линиями (не подменю)</translation>
+    </message>
+    <message>
+        <source>Menu</source>
+        <translation>Меню</translation>
+    </message>
+    <message>
+        <source>The menu's commands right in this list, between lines, as the menu shows them when the list opens</source>
+        <translation>Команды меню прямо в этом списке, между линиями, такими, какие меню показывает при открытии списка</translation>
+    </message>
+    <message>
+        <source>All of “{menu}”</source>
+        <translation>Всё из «{menu}»</translation>
+    </message>
+    <message>
+        <source>its commands in the list</source>
+        <translation>его команды в списке</translation>
+    </message>
+    <message>
+        <source>Its list: drop commands or menus (submenus) on it, or a menu's “everything else” for its commands right in the list; Add Line for a line. With a command, the button runs it and its arrow opens the list; without one, the button opens the list.</source>
+        <translation>Его список: перетащите на него команды или меню (станут подменю) либо «всё остальное» меню — тогда его команды окажутся прямо в списке; «Добавить линию» — линия. С командой кнопка выполняет её, а стрелка открывает список; без команды кнопка открывает список.</translation>
     </message>
 </context>
 </TS>

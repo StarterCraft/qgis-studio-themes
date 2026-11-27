@@ -1361,10 +1361,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Its list: drop commands or menus (submenus) on it, Add Line for a line. With a command, the button runs it and its arrow opens the list; without one, the button opens the list.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>dropdown</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1386,6 +1382,30 @@
     </message>
     <message>
         <source>command</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Its commands right in the list, between lines (not a submenu)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Menu</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The menu's commands right in this list, between lines, as the menu shows them when the list opens</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All of “{menu}”</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>its commands in the list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Its list: drop commands or menus (submenus) on it, or a menu's “everything else” for its commands right in the list; Add Line for a line. With a command, the button runs it and its arrow opens the list; without one, the button opens the list.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
