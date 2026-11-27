@@ -169,7 +169,7 @@ SHORT_NAMES = {
 }
 SHORT_LENGTH = 4
 # Words left out when a short name is made from a title.
-GENERIC_WORDS = {"toolbar", "tools", "tool", "plugin"}
+GENERIC_WORDS = {"toolbar", "tools", "tool", "plugin", "инструменты", "инструмент"}
 
 # Vertical toolbars: three-letter names across the top of the handle.
 # Others, such as plugin toolbars, get the first three letters of their

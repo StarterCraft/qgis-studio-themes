@@ -47,6 +47,7 @@ from qgis.PyQt.QtWidgets import (
 
 from . import studio_toolbars
 from .studio_events import menu_of
+from .studio_i18n import label as translated_label, tr
 
 HOST_NAME = "studioRibbonHost"
 # The tab shown, whether the ribbon is collapsed to its tabs, and the
@@ -500,6 +501,13 @@ LABELS_BY_NAME = {
 SKIPPED_WIDGETS = ("QgsSnappingWidget",)
 
 
+def label_for(key, own):
+    """The label of the command named `key` (see _key): its short one
+    (LABELS_BY_NAME) in QGIS's language (studio_i18n), else `own`, its own
+    text, which QGIS translates."""
+    return translated_label(LABELS_BY_NAME.get(key)) or own
+
+
 def clean(text):
     """An action's text as a label: no mnemonic, ellipsis or markup."""
     text = re.sub(r"<[^>]+>", "", (text or "").replace("&&", "\0").replace("&", "").replace("\0", "&"))
@@ -701,7 +709,7 @@ class Ribbon(QWidget):
         self.collapse.setAutoRaise(True)
         self.collapse.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.collapse.setCheckable(True)
-        self.collapse.setToolTip("Collapse the ribbon to its tabs (double-click a tab)")
+        self.collapse.setToolTip(tr("Collapse the ribbon to its tabs (double-click a tab)"))
         self.collapse.toggled.connect(self.set_collapsed)
         buttons.addWidget(self.collapse)
         top.addLayout(buttons)
@@ -1065,11 +1073,11 @@ class StudioRibbon(QObject):
         corner_layout.setContentsMargins(0, 0, 0, 0)
         corner_layout.setSpacing(2)
         self._watch_menus()
-        self._ribbon = Ribbon([title for title, _groups in TABS], self._build_page, self._corner)
+        self._ribbon = Ribbon([tr(title, "title") for title, _groups in TABS], self._build_page, self._corner)
         self._ribbon.set_density(self._density)
         self._ribbon.page_height = page_height(self._caption_font, self._caption_position)
         self._fill_corner()
-        host = self._host = QToolBar("Ribbon", window)
+        host = self._host = QToolBar(tr("Ribbon"), window)
         host.setObjectName(HOST_NAME)
         host.setMovable(False)
         host.setFloatable(False)
@@ -1316,7 +1324,9 @@ class StudioRibbon(QObject):
             a.objectName() for t in all_toolbars for a in t.actions() if a.objectName()}
         seen = set()
         for group in groups:
-            widget = self._group(content, group, toolbars, seen)
+            # The group's name in QGIS's language (TABS names stay English:
+            # they are keys).
+            widget = self._group(content, (tr(group[0], "title"),) + tuple(group[1:]), toolbars, seen)
             if widget is not None:
                 layout.addWidget(widget)
         if title == PLUGIN_TAB:
@@ -1324,7 +1334,7 @@ class StudioRibbon(QObject):
                 name = toolbar.objectName()
                 if name in self._tab_of or name == CORNER_TOOLBAR:
                     continue
-                spec = (toolbar.windowTitle() or name or "Plugin", ((toolbar, None),), (), AUTO)
+                spec = (toolbar.windowTitle() or name or tr("Plugin", "title"), ((toolbar, None),), (), AUTO)
                 widget = self._group(content, spec, toolbars, seen)
                 if widget is not None:
                     layout.addWidget(widget)
@@ -1332,7 +1342,7 @@ class StudioRibbon(QObject):
             extra = [] if menu_bar is None else [
                 a for a in menu_bar.actions()
                 if menu_of(a) is not None and menu_of(a).objectName() not in self._menu_tabs]
-            widget = self._group(content, ("Menus", (("actions", extra),), (), LABELS), toolbars, seen)
+            widget = self._group(content, (tr("Menus", "title"), (("actions", extra),), (), LABELS), toolbars, seen)
             if widget is not None:
                 layout.addWidget(widget)
         layout.addStretch(1)
@@ -1551,7 +1561,7 @@ class StudioRibbon(QObject):
             self._give_icon(button, action, kind)
         elif self._icons is not None:
             self._icons.swap_action(action)
-        self._style(button, kind, LABELS_BY_NAME.get(_key(action)) or clean(action.text()))
+        self._style(button, kind, label_for(_key(action), clean(action.text())))
         return button
 
     def _give_icon(self, button, action, kind):
@@ -1591,7 +1601,7 @@ class StudioRibbon(QObject):
             button.sync()
 
         button.triggered.connect(chosen)
-        label = LABELS_BY_NAME.get(action.objectName()) or clean(default.text() if default else source.toolTip())
+        label = label_for(action.objectName(), clean(default.text() if default else source.toolTip()))
         self._style(button, kind, label)
         return button
 
