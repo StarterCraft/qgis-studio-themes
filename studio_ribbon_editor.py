@@ -32,9 +32,10 @@ import os
 import yaml
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
-    QDir, QDirIterator, QItemSelectionModel, QMimeData, QRegularExpression, QSize, Qt, pyqtSignal,
+    QDir, QDirIterator, QItemSelectionModel, QMimeData, QProcess, QRegularExpression, QSize, Qt, QTimer, QUrl,
+    pyqtSignal,
 )
-from qgis.PyQt.QtGui import QBrush, QColor, QFont, QFontDatabase, QIcon, QPalette, QPixmap, QSyntaxHighlighter, QTextCharFormat, QTextCursor
+from qgis.PyQt.QtGui import QBrush, QColor, QDesktopServices, QFont, QFontDatabase, QIcon, QPalette, QPixmap, QSyntaxHighlighter, QTextCharFormat, QTextCursor
 from qgis.PyQt.QtWidgets import (
     QAbstractItemView, QAction, QApplication, QCheckBox, QComboBox, QDialog, QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QHeaderView, QLabel,
     QLineEdit, QListWidget, QListWidgetItem, QMenu, QMessageBox, QPlainTextEdit, QPushButton, QSplitter, QTabWidget, QToolBar,
@@ -430,13 +431,13 @@ def listed(entry):
 
 
 def _share_columns(tree, shares):
-    """Columns as fixed shares of the tree's width (the last one takes the
-    rest, or fits its title when sized to contents), so they line up
-    whatever the window's size."""
+    """Columns as fixed shares of the tree's width: the trailing ones sized
+    to contents (tick columns) fit their titles, the last other one takes
+    the rest, so they line up whatever the window's size."""
     header = tree.header()
     width = tree.viewport().width()
     last = header.count() - 1
-    if header.sectionResizeMode(last) == QHeaderView.ResizeMode.ResizeToContents:
+    while last > len(shares) and header.sectionResizeMode(last) == QHeaderView.ResizeMode.ResizeToContents:
         width -= header.sectionSize(last)
         last -= 1
     header.setStretchLastSection(False)
@@ -920,7 +921,7 @@ class RibbonEditorDialog(QDialog):
     LAYOUTS = (
         (studio_ribbon.LABELS, "Labelled buttons"),
         (studio_ribbon.ICONS, "Icons only"),
-        (studio_ribbon.AUTO, "Auto (large for up to 3 buttons, else icons)"),
+        (studio_ribbon.AUTO, "Auto"),
     )
 
     def __init__(self, iface, parent=None):
@@ -949,10 +950,15 @@ class RibbonEditorDialog(QDialog):
         self._message = QLabel()
         self._message.setWordWrap(True)
         self._message.setTextFormat(Qt.TextFormat.RichText)
-        where = QLabel(_t("Saved to {path}. The ribbon is rebuilt from it the next time QGIS starts.")
-                       .format(path=f"<code>{self._path}</code>"))
-        where.setWordWrap(True)
-        where.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        # The window's title says whether there are changes, checked once
+        # edits rest (writing the tree out on every keystroke lags).
+        self._title_timer = QTimer(self)
+        self._title_timer.setSingleShot(True)
+        self._title_timer.setInterval(300)
+        self._title_timer.timeout.connect(self._update_title)
+        folder = QPushButton(_t("Open Folder"))
+        folder.setToolTip(self._path)
+        folder.clicked.connect(self._open_folder)
         reset = QPushButton(_t("Reset to Default"))
         reset.setToolTip(_t("Load the plugin's own ribbon. Save to use it."))
         reset.clicked.connect(self._reset)
@@ -965,6 +971,7 @@ class RibbonEditorDialog(QDialog):
         close = QPushButton(_t("Close"))
         close.clicked.connect(self.reject)
         buttons = QHBoxLayout()
+        buttons.addWidget(folder)
         buttons.addWidget(reset)
         buttons.addWidget(reload_button)
         buttons.addStretch(1)
@@ -973,7 +980,6 @@ class RibbonEditorDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.addWidget(self._views, 1)
         layout.addWidget(self._message)
-        layout.addWidget(where)
         layout.addLayout(buttons)
         self._load()
 
@@ -1003,19 +1009,15 @@ class RibbonEditorDialog(QDialog):
         tools = QHBoxLayout()
         moves = QHBoxLayout()
         for row, text, tip, slot in (
-                (tools, _t("Add Tab"), _t("A new tab after the current one"), self._add_tab),
-                (tools, _t("Add Group"), _t("A new group in the current tab"), self._add_group),
-                (tools, _t("Add Dropdown"), _t("A button with a list of its own. On a chosen button: "
-                                              "that button, with a list behind its arrow"), self._add_dropdown),
-                (tools, _t("Add Line"), _t("A line between the items of a dropdown's list"), self._add_line),
-                (tools, _t("Remove"), _t("Take the selected items off the ribbon (Delete)"),
-                 self._tree.remove_selected),
+                (tools, _t("Add Tab"), "", self._add_tab),
+                (tools, _t("Add Group"), "", self._add_group),
+                (tools, _t("Add Dropdown"), _t("On a chosen button: turns it into a dropdown"), self._add_dropdown),
+                (tools, _t("Add Line"), _t("A line in a dropdown's list"), self._add_line),
+                (tools, _t("Remove"), "Delete", self._tree.remove_selected),
                 (moves, "▲", _t("Move up"), lambda: self._shift(-1)),
                 (moves, "▼", _t("Move down"), lambda: self._shift(1)),
-                (moves, _t("Add Caption"), _t("A semibold text that is not clicked, in the chosen group's rows "
-                                              "or dropdown's list"), lambda: self._add_label(CAPTION)),
-                (moves, _t("Add Note"), _t("A plain text that is not clicked, in the chosen group's rows "
-                                           "or dropdown's list"), lambda: self._add_label(NOTE)),
+                (moves, _t("Add Caption"), "", lambda: self._add_label(CAPTION)),
+                (moves, _t("Add Note"), "", lambda: self._add_label(NOTE)),
                 (moves, _t("Expand All"), "", self._tree.expandAll),
                 (moves, _t("Collapse All"), "", self._tree.collapseAll)):
             button = QPushButton(text)
@@ -1028,12 +1030,6 @@ class RibbonEditorDialog(QDialog):
         left = QWidget()
         left_layout = QVBoxLayout(left)
         left_layout.setContentsMargins(0, 0, 0, 0)
-        title = QLabel(f"<b>{_t('Ribbon')}</b>")
-        hint = QLabel(_t("Drag to reorder or move. Double-click a tab or group to rename it. "
-                         "Tick Large for a large button. Drop commands on a dropdown to fill its list."))
-        hint.setWordWrap(True)
-        left_layout.addWidget(title)
-        left_layout.addWidget(hint)
         left_layout.addLayout(tools)
         left_layout.addLayout(moves)
         left_layout.addWidget(self._tree, 1)
@@ -1049,18 +1045,11 @@ class RibbonEditorDialog(QDialog):
         self._unplaced = QCheckBox(_t("Only commands not on the ribbon"))
         self._unplaced.toggled.connect(self._filter_palette)
         add = QPushButton(_t("Add to Group →"))
-        add.setToolTip(_t("Add the chosen commands to the group chosen on the left (or double-click them)"))
         add.clicked.connect(self._add_chosen)
-        right_hint = QLabel(_t("Drag commands onto a group. Grey: on the ribbon already. "
-                               "Drag a toolbar for all its buttons no group names, or a menu's "
-                               "“everything else” for its other commands."))
-        right_hint.setWordWrap(True)
         row = QHBoxLayout()
         row.addWidget(self._unplaced)
         row.addStretch(1)
         row.addWidget(add)
-        right_layout.addWidget(QLabel(f"<b>{_t('Available commands')}</b>"))
-        right_layout.addWidget(right_hint)
         right_layout.addWidget(self._search)
         right_layout.addLayout(row)
         right_layout.addWidget(self._palette, 1)
@@ -1079,7 +1068,6 @@ class RibbonEditorDialog(QDialog):
         form = self._form = QFormLayout(box)
         self._title = QLineEdit()
         self._title.textEdited.connect(self._title_edited)
-        self._shown_as = QLabel()
         self._layout = QComboBox()
         for value, text in self.LAYOUTS:
             self._layout.addItem(_t(text), value)
@@ -1087,7 +1075,7 @@ class RibbonEditorDialog(QDialog):
         self._command = QComboBox()
         self._command.setEditable(True)
         self._command.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
-        self._command.addItem(_t("(none: the button only opens its list)"), "")
+        self._command.addItem(_t("(none)"), "")
         for name in sorted(self._catalog.actions, key=lambda n: self._catalog.label(n)[0].lower()):
             self._command.addItem(f"{self._catalog.label(name)[0]}  ({name})", name)
         self._command.completer().setFilterMode(Qt.MatchFlag.MatchContains)
@@ -1099,10 +1087,10 @@ class RibbonEditorDialog(QDialog):
         self._info.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         form.addRow(_t("Title"), self._title)
         form.addRow(_t("Button command"), self._command)
-        self._inline = QCheckBox(_t("Its commands right in the list, between lines (not a submenu)"))
+        self._inline = QCheckBox(_t("Show its commands in the list"))
         self._inline.toggled.connect(self._inline_toggled)
         form.addRow(_t("Menu"), self._inline)
-        self._titled = QCheckBox(_t("With the menu's name above them (not clickable)"))
+        self._titled = QCheckBox(_t("Under the menu's name"))
         self._titled.toggled.connect(self._inline_toggled)
         form.addRow("", self._titled)
         self._icon_row = QWidget()
@@ -1120,7 +1108,6 @@ class RibbonEditorDialog(QDialog):
         icon_layout.addWidget(self._reset_icon)
         icon_layout.addWidget(self._icon_note, 1)
         form.addRow(_t("Icon"), self._icon_row)
-        form.addRow(_t("Shown as"), self._shown_as)
         form.addRow(_t("Buttons"), self._layout)
         form.addRow(self._info)
         self._show_properties(None)
@@ -1143,8 +1130,6 @@ class RibbonEditorDialog(QDialog):
         row = QHBoxLayout()
         row.addWidget(self._text_status, 1)
         row.addWidget(check)
-        layout.addWidget(QLabel(_t("The file's format is described in its header. "
-                                   "Checked before the visual view or Save uses it.")))
         layout.addWidget(self._text, 1)
         layout.addLayout(row)
         return widget
@@ -1681,7 +1666,6 @@ class RibbonEditorDialog(QDialog):
             group.setExpanded(True)
         self._tree.setCurrentItem(dropdown)
         self._tree_changed()
-        self._say(_t("Drop commands or menus on the dropdown to fill its list."))
 
     def _add_label(self, kind):
         """A caption or note after the chosen item: in a dropdown's list when
@@ -1726,13 +1710,17 @@ class RibbonEditorDialog(QDialog):
 
     # ---- Reacting to the tree -------------------------------------------------
 
-    def _tree_changed(self):
+    def _tree_changed(self, typing=False):
+        """The tree changed. `typing`: a text from the properties, already
+        in the tree's row: nothing else (the palette, the properties) depends
+        on it."""
         if self._syncing:
             return
         self._tree_dirty = True
-        self._refresh_palette()
-        self._show_properties(self._tree.currentItem())
-        self._update_title()
+        if not typing:
+            self._refresh_palette()
+            self._show_properties(self._tree.currentItem())
+        self._title_timer.start()
 
     def _item_changed(self, item, column):
         if self._syncing:
@@ -1742,8 +1730,10 @@ class RibbonEditorDialog(QDialog):
             self._syncing = True
             self._show_translation(item)
             self._syncing = False
-            if self._tree.currentItem() is item and self._title.text() != item.text(0):
-                self._title.setText(item.text(0))
+            if self._tree.currentItem() is item:
+                self._set_title(item.text(0), tr(item.text(0), "title"))
+            self._tree_changed(typing=True)
+            return
         elif column in TICKS and depth == ENTRY and entry_key(item.data(0, ROLE)):
             key = TICKS[column]
             data = item.parent().data(0, ROLE)
@@ -1767,73 +1757,46 @@ class RibbonEditorDialog(QDialog):
         button = button or listed
         form.labelForField(self._title).setText(_t("Text") if label or button else _t("Title"))
         form.labelForField(self._command).setText(_t("For command") if label else _t("Button command"))
-        self._command.setItemText(0, _t("(none)") if label else _t("(none: the button only opens its list)"))
+        self._title.setToolTip(_t("{title}: the usual text, {id}: the objectName") if label or button else "")
         for widget, shown in ((self._title, depth in (TAB, GROUP) or dropdown or label or button),
-                              (self._shown_as, depth in (TAB, GROUP)), (self._command, dropdown or label),
+                              (self._command, dropdown or label),
                               (self._icon_row, (button and not listed) or (dropdown and bool(entry_key(item.data(0, ROLE))))),
                               (self._inline, depth == ITEM and self._is_menu_item(item)),
                               (self._titled, depth == ITEM and self._is_menu_item(item)),
                               (self._layout, depth == GROUP)):
             form.setRowVisible(widget, shown)
+        self._info.setText("")
         if depth is None:
-            self._info.setText(_t("Choose a tab, group or button to see its properties."))
             return
         if depth in (TAB, GROUP):
-            self._title.setText(item.text(0))
-            shown = tr(item.text(0), "title")
-            self._shown_as.setText(shown if shown != item.text(0) else _t("(as written: no translation)"))
+            # The name the ribbon shows (its translation) as the hint.
+            self._set_title(item.text(0), tr(item.text(0), "title"))
         if depth == TAB:
-            plugins = item.text(0) == studio_ribbon.PLUGIN_TAB
-            self._info.setText(_t("Plugins' own toolbars and menus are added to this tab.") if plugins else "")
             return
         if depth == GROUP:
             data = item.data(0, ROLE)
             blocked = self._layout.blockSignals(True)
             self._layout.setCurrentIndex(max(0, self._layout.findData(data["layout"])))
             self._layout.blockSignals(blocked)
-            info = []
             if data["rows"]:
                 rows = " | ".join(", ".join(r) for r in data["rows"])
-                info.append(_t("Rows of small buttons (edit them in the YAML view): {rows}").format(rows=rows))
-            self._info.setText("\n".join(info))
+                self._info.setText(_t("Rows (YAML): {rows}").format(rows=rows))
             return
         entry = item.data(0, ROLE)
         if (button and not listed) or dropdown:
             self._show_icon(entry_key(entry))
-        if listed:
-            name = entry["name"]
-            self._title.setText(self._overrides.get(name, ""))
-            self._title.setPlaceholderText(self._catalog.label(name)[0])
-            self._info.setText(_t("Shown: {text}").format(text=self._button_text(name)) + "\n\n" + _t(
-                "A text of your own for this item, wherever it is on the ribbon (saved under labels:). "
-                "Empty: its usual text. {title} in it is the usual text, {id} its objectName. "
-                "Drag it onto a group to make it a button again."))
-            return
         if button:
             name = entry["name"]
-            self._title.setText(self._overrides.get(name, ""))
-            self._title.setPlaceholderText(self._catalog.label(name)[0])
-            self._info.setText(_t("Shown: {text}").format(text=self._button_text(name)) + "\n\n" + _t(
-                "A text of your own for this button, wherever it is on the ribbon (saved under labels:). "
-                "Empty: its usual text. {title} in it is the usual text, {id} its objectName. "
-                "Tick Large in the tree for a large button."))
+            self._set_title(self._overrides.get(name, ""), self._catalog.label(name)[0])
             return
         if label:
-            self._title.setText(entry.get("text") or "")
-            self._title.setPlaceholderText("{title}")
+            self._set_title(entry.get("text") or "", "{title}")
             self._set_command(entry.get("for") or "")
-            self._info.setText(_t("Shown: {text}").format(text=self._label_preview(entry)) + "\n\n" + _t(
-                "Never clicked. In the text, {title} is the label of the command or menu chosen above "
-                "and {id} its objectName; without a text, its label is shown."))
             return
         if dropdown:
-            self._title.setText(entry.get("title") or "")
-            self._title.setPlaceholderText(_t("(the command's own label)") if entry.get("action") else "")
-            self._set_command(entry.get("action") or "")
-            self._info.setText(_t("Its list: drop commands or menus (submenus) on it, or a menu's “everything "
-                                  "else” for its commands right in the list; Add Line for a line. "
-                                  "With a command, the button runs it and its arrow opens the list; "
-                                  "without one, the button opens the list."))
+            action = entry.get("action")
+            self._set_title(entry.get("title") or "", self._catalog.label(action)[0] if action else "")
+            self._set_command(action or "")
             return
         if depth == ITEM:
             name = item.data(0, ROLE)["name"]
@@ -1842,15 +1805,14 @@ class RibbonEditorDialog(QDialog):
                 box.setChecked(value)
                 box.blockSignals(blocked)
             self._titled.setEnabled(bool(item_menu(name)))
-            self._info.setText(f"{item.text(0)}\n{item.text(1)}\n\n" + _t(
-                "An item of the dropdown's list. Drag it onto a group to make it a button again."))
-            return
-        texts = {
-            CMD: _t("A button. Tick Large in the tree for a large one; Labelled to keep its label in an icon-only group."),
-            REST: _t("Every button of this toolbar that no group names, in its order, also those plugins add to it later."),
-            MENU: _t("Every command of this menu the ribbon shows nowhere else, also those plugins add to it later."),
-        }
-        self._info.setText(f"{item.text(0)}\n{item.text(1)}\n\n{texts[entry['kind']]}")
+
+    def _set_title(self, text, hint):
+        """The title field's text and placeholder, each set only when it
+        differs: setText moves the cursor to the end, also mid-typing."""
+        if self._title.text() != text:
+            self._title.setText(text)
+        if self._title.placeholderText() != hint:
+            self._title.setPlaceholderText(hint)
 
     def _set_command(self, name):
         index = self._command.findData(name) if name else 0
@@ -1925,7 +1887,7 @@ class RibbonEditorDialog(QDialog):
         self._icon_preview.setPixmap(icon.pixmap(24, 24) if icon is not None and not icon.isNull() else QPixmap())
         spec = self._icon_overrides.get(key)
         self._reset_icon.setEnabled(bool(spec))
-        self._icon_note.setText(spec or _t("(its usual icon)"))
+        self._icon_note.setText(spec or "")
         self._icon_note.setToolTip(spec or "")
 
     def _choose_icon(self):
@@ -1979,7 +1941,7 @@ class RibbonEditorDialog(QDialog):
                 iterator.value().setText(0, self._button_text(name))
             iterator += 1
         self._syncing = False
-        self._tree_changed()
+        self._tree_changed(typing=True)
 
     def _change_label(self, item, **changes):
         entry = item.data(0, ROLE)
@@ -1990,7 +1952,7 @@ class RibbonEditorDialog(QDialog):
         item.setData(0, ROLE, entry)
         self._show_label(item)
         self._syncing = False
-        self._tree_changed()
+        self._tree_changed(typing="text" in changes)
 
     def _command_changed(self, *_args):
         item = self._tree.currentItem()
@@ -2026,7 +1988,7 @@ class RibbonEditorDialog(QDialog):
         item.setData(0, ROLE, entry)
         self._show_dropdown(item)
         self._syncing = False
-        self._tree_changed()
+        self._tree_changed(typing="title" in changes)
 
     def _layout_changed(self, _index):
         item = self._tree.currentItem()
@@ -2202,9 +2164,19 @@ class RibbonEditorDialog(QDialog):
             self._say(_t("Saved, but the ribbon could not read it: {error}").format(
                 error=studio_ribbon.TABS_ERROR), error=True)
         else:
-            self._say(_t("Saved. The ribbon shows it now."))
+            self._say("")
         self._update_title()
         return True
+
+    def _open_folder(self):
+        """The folder of the profile's ribbon.yaml, the file chosen when it
+        exists (Windows Explorer), else just the folder."""
+        folder = os.path.dirname(self._path)
+        os.makedirs(folder, exist_ok=True)
+        if os.name == "nt" and os.path.exists(self._path):
+            QProcess.startDetached("explorer", ["/select,", os.path.normpath(self._path)])
+        else:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(folder))
 
     def _say(self, text, error=False):
         color = "#d04040" if error else self.palette().color(QPalette.ColorRole.WindowText).name()

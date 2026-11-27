@@ -1061,14 +1061,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Add the chosen commands to the group chosen on the left (or double-click them)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Drag commands onto a group. Grey: on the ribbon already. Drag a toolbar for all its buttons no group names, or a menu's “everything else” for its other commands.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Properties</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1077,15 +1069,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Shown as</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Buttons</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Large buttons</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1097,27 +1081,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>A button. Tick Large in the tree for a large one; Labelled to keep its label in an icon-only group.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Labelled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Every button of this toolbar that no group names, in its order, also those plugins add to it later.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Every command of this menu the ribbon shows nowhere else, also those plugins add to it later.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>The plugin's own ribbon is loaded. Save to use it.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Saved. The ribbon shows it now.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1149,23 +1117,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>A new tab after the current one</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Add Group</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>A new group in the current tab</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Take the selected items off the ribbon (Delete)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1182,10 +1138,6 @@
     </message>
     <message>
         <source>Collapse All</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The file's format is described in its header. Checked before the visual view or Save uses it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1213,10 +1165,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Choose a tab, group or button to see its properties.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>This file does not read, so the default ribbon is shown. Fix it in the YAML view.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1226,10 +1174,6 @@
     </message>
     <message>
         <source>Save the changes to the ribbon?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Saved to {path}. The ribbon is rebuilt from it the next time QGIS starts.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1253,19 +1197,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>(as written: no translation)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Plugins' own toolbars and menus are added to this tab.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>The default ribbon is shown: this file did not read when QGIS started.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Available commands</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1297,10 +1229,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Rows of small buttons (edit them in the YAML view): {rows}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Could not read {path}: {error}</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1321,23 +1249,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Auto (large for up to 3 buttons, else icons)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Drag to reorder or move. Double-click a tab or group to rename it. Tick Large for a large button. Drop commands on a dropdown to fill its list.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>(none: the button only opens its list)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Button command</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Drop commands or menus on the dropdown to fill its list.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1345,15 +1257,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>A button with a list of its own. On a chosen button: that button, with a list behind its arrow</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Add Line</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>A line between the items of a dropdown's list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1373,18 +1277,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>(the command's own label)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>A text of your own for this item, wherever it is on the ribbon (saved under labels:). Empty: its usual text. {title} in it is the usual text, {id} its objectName. Drag it onto a group to make it a button again.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>An item of the dropdown's list. Drag it onto a group to make it a button again.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>line</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1394,10 +1286,6 @@
     </message>
     <message>
         <source>command</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Its commands right in the list, between lines (not a submenu)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1417,15 +1305,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Its list: drop commands or menus (submenus) on it, or a menu's “everything else” for its commands right in the list; Add Line for a line. With a command, the button runs it and its arrow opens the list; without one, the button opens the list.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>All of “{menu}”, under its name</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>With the menu's name above them (not clickable)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1441,15 +1321,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>A semibold text that is not clicked, in the chosen group's rows or dropdown's list</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Add Note</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>A plain text that is not clicked, in the chosen group's rows or dropdown's list</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1485,23 +1357,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Never clicked. In the text, {title} is the label of the command or menu chosen above and {id} its objectName; without a text, its label is shown.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Shown: {text}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>(no objectName)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>This command has no objectName, so the ribbon cannot place it on its own: drag the menu's “everything else” to show it.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>A text of your own for this button, wherever it is on the ribbon (saved under labels:). Empty: its usual text. {title} in it is the usual text, {id} its objectName. Tick Large in the tree for a large button.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1557,7 +1417,35 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>(its usual icon)</source>
+        <source>A line in a dropdown's list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Auto</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>On a chosen button: turns it into a dropdown</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Rows (YAML): {rows}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show its commands in the list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Under the menu's name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>{title}: the usual text, {id}: the objectName</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

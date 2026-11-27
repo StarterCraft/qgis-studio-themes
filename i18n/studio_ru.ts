@@ -1061,14 +1061,6 @@
         <translation>Добавить в группу →</translation>
     </message>
     <message>
-        <source>Add the chosen commands to the group chosen on the left (or double-click them)</source>
-        <translation>Добавить выбранные команды в группу, выбранную слева (или дважды щёлкните по ним)</translation>
-    </message>
-    <message>
-        <source>Drag commands onto a group. Grey: on the ribbon already. Drag a toolbar for all its buttons no group names, or a menu's “everything else” for its other commands.</source>
-        <translation>Перетащите команды на группу. Серые уже есть на ленте. Перетащите панель инструментов — получите все её кнопки, не названные в группах; «всё остальное» меню — его прочие команды.</translation>
-    </message>
-    <message>
         <source>Properties</source>
         <translation>Свойства</translation>
     </message>
@@ -1077,16 +1069,8 @@
         <translation>Название</translation>
     </message>
     <message>
-        <source>Shown as</source>
-        <translation>На ленте</translation>
-    </message>
-    <message>
         <source>Buttons</source>
         <translation>Кнопки</translation>
-    </message>
-    <message>
-        <source>Large buttons</source>
-        <translation>Крупные кнопки</translation>
     </message>
     <message>
         <source>Check</source>
@@ -1097,28 +1081,12 @@
         <translation>Перетащите, чтобы получить кнопку, открывающую это меню</translation>
     </message>
     <message>
-        <source>A button. Tick Large in the tree for a large one; Labelled to keep its label in an icon-only group.</source>
-        <translation>Кнопка. Отметьте «Крупная» в дереве, чтобы сделать её крупной, или «С подписью», чтобы сохранить подпись в группе из одних значков.</translation>
-    </message>
-    <message>
         <source>Labelled</source>
         <translation>С подписью</translation>
     </message>
     <message>
-        <source>Every button of this toolbar that no group names, in its order, also those plugins add to it later.</source>
-        <translation>Все кнопки этой панели, не названные ни в одной группе, по порядку, включая те, что плагины добавят позже.</translation>
-    </message>
-    <message>
-        <source>Every command of this menu the ribbon shows nowhere else, also those plugins add to it later.</source>
-        <translation>Все команды этого меню, которых больше нигде нет на ленте, включая те, что плагины добавят позже.</translation>
-    </message>
-    <message>
         <source>The plugin's own ribbon is loaded. Save to use it.</source>
         <translation>Загружена лента самого плагина. Сохраните, чтобы применить её.</translation>
-    </message>
-    <message>
-        <source>Saved. The ribbon shows it now.</source>
-        <translation>Сохранено. Лента уже обновлена.</translation>
     </message>
     <message>
         <source>Saved, but the ribbon could not read it: {error}</source>
@@ -1149,24 +1117,12 @@
         <translation>Добавить вкладку</translation>
     </message>
     <message>
-        <source>A new tab after the current one</source>
-        <translation>Новая вкладка после текущей</translation>
-    </message>
-    <message>
         <source>Add Group</source>
         <translation>Добавить группу</translation>
     </message>
     <message>
-        <source>A new group in the current tab</source>
-        <translation>Новая группа в текущей вкладке</translation>
-    </message>
-    <message>
         <source>Remove</source>
         <translation>Удалить</translation>
-    </message>
-    <message>
-        <source>Take the selected items off the ribbon (Delete)</source>
-        <translation>Убрать выбранное с ленты (Delete)</translation>
     </message>
     <message>
         <source>Move up</source>
@@ -1183,10 +1139,6 @@
     <message>
         <source>Collapse All</source>
         <translation>Свернуть все</translation>
-    </message>
-    <message>
-        <source>The file's format is described in its header. Checked before the visual view or Save uses it.</source>
-        <translation>Формат файла описан в его заголовке. Файл проверяется перед переходом в визуальный режим и перед сохранением.</translation>
     </message>
     <message>
         <source>Toolbars</source>
@@ -1213,10 +1165,6 @@
         <translation>Сначала добавьте вкладку.</translation>
     </message>
     <message>
-        <source>Choose a tab, group or button to see its properties.</source>
-        <translation>Выберите вкладку, группу или кнопку, чтобы увидеть её свойства.</translation>
-    </message>
-    <message>
         <source>This file does not read, so the default ribbon is shown. Fix it in the YAML view.</source>
         <translation>Файл не читается, поэтому показана лента по умолчанию. Исправьте его в режиме YAML.</translation>
     </message>
@@ -1227,10 +1175,6 @@
     <message>
         <source>Save the changes to the ribbon?</source>
         <translation>Сохранить изменения ленты?</translation>
-    </message>
-    <message>
-        <source>Saved to {path}. The ribbon is rebuilt from it the next time QGIS starts.</source>
-        <translation>Сохраняется в {path}. Лента собирается из него при следующем запуске QGIS.</translation>
     </message>
     <message>
         <source>Drag for all buttons of this toolbar that no group names</source>
@@ -1253,20 +1197,8 @@
         <translation>Кнопки панели, не названные ни в одной группе, включая добавленные плагинами</translation>
     </message>
     <message>
-        <source>(as written: no translation)</source>
-        <translation>(как написано: перевода нет)</translation>
-    </message>
-    <message>
-        <source>Plugins' own toolbars and menus are added to this tab.</source>
-        <translation>На эту вкладку добавляются собственные панели и меню плагинов.</translation>
-    </message>
-    <message>
         <source>The default ribbon is shown: this file did not read when QGIS started.</source>
         <translation>Показана лента по умолчанию: при запуске QGIS этот файл не прочитался.</translation>
-    </message>
-    <message>
-        <source>Available commands</source>
-        <translation>Доступные команды</translation>
     </message>
     <message>
         <source>toolbar “{toolbar}”</source>
@@ -1297,10 +1229,6 @@
         <translation>меню</translation>
     </message>
     <message>
-        <source>Rows of small buttons (edit them in the YAML view): {rows}</source>
-        <translation>Ряды мелких кнопок (правятся в режиме YAML): {rows}</translation>
-    </message>
-    <message>
         <source>Could not read {path}: {error}</source>
         <translation>Не удалось прочитать {path}: {error}</translation>
     </message>
@@ -1321,40 +1249,16 @@
         <translation>Только значки</translation>
     </message>
     <message>
-        <source>Auto (large for up to 3 buttons, else icons)</source>
-        <translation>Авто (крупные, если кнопок не больше 3, иначе значки)</translation>
-    </message>
-    <message>
-        <source>Drag to reorder or move. Double-click a tab or group to rename it. Tick Large for a large button. Drop commands on a dropdown to fill its list.</source>
-        <translation>Перетаскивайте, чтобы менять порядок и переносить. Двойной щелчок по вкладке или группе — переименовать. Отметка «Крупная» — крупная кнопка. Перетащите команды на выпадающий список, чтобы наполнить его.</translation>
-    </message>
-    <message>
-        <source>(none: the button only opens its list)</source>
-        <translation>(нет: кнопка только открывает список)</translation>
-    </message>
-    <message>
         <source>Button command</source>
         <translation>Команда кнопки</translation>
-    </message>
-    <message>
-        <source>Drop commands or menus on the dropdown to fill its list.</source>
-        <translation>Перетащите команды или меню на выпадающий список, чтобы наполнить его.</translation>
     </message>
     <message>
         <source>Add Dropdown</source>
         <translation>Добавить список</translation>
     </message>
     <message>
-        <source>A button with a list of its own. On a chosen button: that button, with a list behind its arrow</source>
-        <translation>Кнопка со своим выпадающим списком. Если выбрана кнопка — она сама, со списком за стрелкой</translation>
-    </message>
-    <message>
         <source>Add Line</source>
         <translation>Добавить линию</translation>
-    </message>
-    <message>
-        <source>A line between the items of a dropdown's list</source>
-        <translation>Линия между пунктами выпадающего списка</translation>
     </message>
     <message>
         <source>A dropdown: its command on its face, its list behind the arrow</source>
@@ -1373,18 +1277,6 @@
         <translation>выпадающий список</translation>
     </message>
     <message>
-        <source>(the command's own label)</source>
-        <translation>(подпись самой команды)</translation>
-    </message>
-    <message>
-        <source>A text of your own for this item, wherever it is on the ribbon (saved under labels:). Empty: its usual text. {title} in it is the usual text, {id} its objectName. Drag it onto a group to make it a button again.</source>
-        <translation>Свой текст этого пункта — везде, где он есть на ленте (хранится в разделе labels:). Пусто — обычный текст. {title} в нём — обычный текст, {id} — его objectName. Перетащите пункт на группу, чтобы снова сделать его кнопкой.</translation>
-    </message>
-    <message>
-        <source>An item of the dropdown's list. Drag it onto a group to make it a button again.</source>
-        <translation>Пункт выпадающего списка. Перетащите его на группу, чтобы он снова стал кнопкой.</translation>
-    </message>
-    <message>
         <source>line</source>
         <translation>линия</translation>
     </message>
@@ -1395,10 +1287,6 @@
     <message>
         <source>command</source>
         <translation>команда</translation>
-    </message>
-    <message>
-        <source>Its commands right in the list, between lines (not a submenu)</source>
-        <translation>Его команды прямо в списке, между линиями (не подменю)</translation>
     </message>
     <message>
         <source>Menu</source>
@@ -1417,16 +1305,8 @@
         <translation>его команды в списке</translation>
     </message>
     <message>
-        <source>Its list: drop commands or menus (submenus) on it, or a menu's “everything else” for its commands right in the list; Add Line for a line. With a command, the button runs it and its arrow opens the list; without one, the button opens the list.</source>
-        <translation>Его список: перетащите на него команды или меню (станут подменю) либо «всё остальное» меню — тогда его команды окажутся прямо в списке; «Добавить линию» — линия. С командой кнопка выполняет её, а стрелка открывает список; без команды кнопка открывает список.</translation>
-    </message>
-    <message>
         <source>All of “{menu}”, under its name</source>
         <translation>Всё из «{menu}», с его названием</translation>
-    </message>
-    <message>
-        <source>With the menu's name above them (not clickable)</source>
-        <translation>С названием меню над ними (не нажимается)</translation>
     </message>
     <message>
         <source>caption</source>
@@ -1441,16 +1321,8 @@
         <translation>Добавить подпись</translation>
     </message>
     <message>
-        <source>A semibold text that is not clicked, in the chosen group's rows or dropdown's list</source>
-        <translation>Полужирный текст, который не нажимается, — в рядах выбранной группы или в выпадающем списке</translation>
-    </message>
-    <message>
         <source>Add Note</source>
         <translation>Добавить пояснение</translation>
-    </message>
-    <message>
-        <source>A plain text that is not clicked, in the chosen group's rows or dropdown's list</source>
-        <translation>Обычный текст, который не нажимается, — в рядах выбранной группы или в выпадающем списке</translation>
     </message>
     <message>
         <source>Texts</source>
@@ -1485,24 +1357,12 @@
         <translation>(нет)</translation>
     </message>
     <message>
-        <source>Never clicked. In the text, {title} is the label of the command or menu chosen above and {id} its objectName; without a text, its label is shown.</source>
-        <translation>Не нажимается. В тексте {title} — подпись команды или меню, выбранных выше, а {id} — их objectName; без текста показывается их подпись.</translation>
-    </message>
-    <message>
-        <source>Shown: {text}</source>
-        <translation>Показывается: {text}</translation>
-    </message>
-    <message>
         <source>(no objectName)</source>
         <translation>(нет objectName)</translation>
     </message>
     <message>
         <source>This command has no objectName, so the ribbon cannot place it on its own: drag the menu's “everything else” to show it.</source>
         <translation>У этой команды нет objectName, поэтому лента не может поставить её отдельно: перетащите «всё остальное» этого меню, чтобы показать её.</translation>
-    </message>
-    <message>
-        <source>A text of your own for this button, wherever it is on the ribbon (saved under labels:). Empty: its usual text. {title} in it is the usual text, {id} its objectName. Tick Large in the tree for a large button.</source>
-        <translation>Свой текст этой кнопки — везде, где она есть на ленте (хранится в разделе labels:). Пусто — обычный текст. {title} в нём — обычный текст, {id} — её objectName. Отметка «Крупная» в дереве — крупная кнопка.</translation>
     </message>
     <message>
         <source>Choose an Icon</source>
@@ -1557,8 +1417,36 @@
         <translation>Значок</translation>
     </message>
     <message>
-        <source>(its usual icon)</source>
-        <translation>(обычный значок)</translation>
+        <source>A line in a dropdown's list</source>
+        <translation>Линия в выпадающем списке</translation>
+    </message>
+    <message>
+        <source>Auto</source>
+        <translation>Авто</translation>
+    </message>
+    <message>
+        <source>On a chosen button: turns it into a dropdown</source>
+        <translation>Для выбранной кнопки — превращает её в список</translation>
+    </message>
+    <message>
+        <source>Open Folder</source>
+        <translation>Открыть папку</translation>
+    </message>
+    <message>
+        <source>Rows (YAML): {rows}</source>
+        <translation>Ряды (YAML): {rows}</translation>
+    </message>
+    <message>
+        <source>Show its commands in the list</source>
+        <translation>Показывать его команды в списке</translation>
+    </message>
+    <message>
+        <source>Under the menu's name</source>
+        <translation>Под названием меню</translation>
+    </message>
+    <message>
+        <source>{title}: the usual text, {id}: the objectName</source>
+        <translation>{title} — обычный текст, {id} — objectName</translation>
     </message>
 </context>
 </TS>
