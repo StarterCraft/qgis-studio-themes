@@ -30,6 +30,10 @@
 #   layout:  labels | icons | auto   (auto: plugins' groups; large labelled buttons
 #            for up to 3 actions, else icons)
 #   rows:    explicit rows of small buttons, lists of objectNames (optional)
+#
+# labels: (optional, after tabs:) texts of one's own for buttons, wherever they are:
+#   labels:
+#     mActionOpenProject: "Open…"       # {title}: the text it would have, {id}: its objectName
 
 tabs:
   - title: "Project"

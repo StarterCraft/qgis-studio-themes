@@ -341,7 +341,19 @@ def parse_tabs(data):
         raise ValueError(f"ribbon.yaml: tab titles must differ: {', '.join(twice)}")
     if PLUGIN_TAB not in titles:
         raise ValueError(f"ribbon.yaml: a tab titled {PLUGIN_TAB!r} is needed (plugins' toolbars go there)")
+    parse_labels(data)
     return tuple(tabs)
+
+
+def parse_labels(data):
+    """ribbon.yaml's labels: {objectName: text} — the texts of buttons
+    given one of one's own, wherever they are ({title} in it: the label the
+    ribbon would give it, {id}: its objectName)."""
+    labels = data.get("labels") or {}
+    if not isinstance(labels, dict) or not all(
+            isinstance(k, str) and k and isinstance(v, str) for k, v in labels.items()):
+        raise ValueError("ribbon.yaml: labels: expected objectName: \"text\" pairs")
+    return dict(labels)
 
 
 def read_tabs_text(text):
@@ -356,14 +368,19 @@ def load_tabs(path=TABS_FILE):
 
 
 def _startup_tabs():
-    """(tabs, file read, why the profile's file was not read or None)."""
+    """(tabs, file read, why the profile's file was not read or None);
+    LABEL_OVERRIDES from the same file."""
+    global LABEL_OVERRIDES  # pylint: disable=global-statement
     try:
         path = user_tabs_file()
     except (ImportError, RuntimeError):
         path = None
     if path and os.path.exists(path):
         try:
-            return load_tabs(path), path, None
+            tabs = load_tabs(path)
+            with open(path, encoding="utf-8") as stream:
+                LABEL_OVERRIDES = parse_labels(yaml.safe_load(stream))
+            return tabs, path, None
         except (OSError, ValueError, yaml.YAMLError) as error:
             try:
                 from qgis.core import Qgis, QgsMessageLog  # pylint: disable=import-outside-toplevel
@@ -372,8 +389,13 @@ def _startup_tabs():
                     Qgis.MessageLevel.Warning)
             except (ImportError, RuntimeError):
                 pass
+            LABEL_OVERRIDES = {}
             return load_tabs(), TABS_FILE, f"{error}"
     return load_tabs(), TABS_FILE, None
+
+
+# Buttons' texts of one's own (ribbon.yaml labels:), by objectName.
+LABEL_OVERRIDES = {}
 
 
 # The tabs shown, the file they came from and the profile file's error.
@@ -518,11 +540,15 @@ LABELS_BY_NAME = {
 SKIPPED_WIDGETS = ("QgsSnappingWidget",)
 
 
-def label_for(key, own):
+def label_for(key, own, override=True):
     """The label of the command named `key` (see _key): its short one
     (LABELS_BY_NAME) in QGIS's language (studio_i18n), else `own`, its own
-    text, which QGIS translates."""
-    return translated_label(LABELS_BY_NAME.get(key)) or own
+    text, which QGIS translates; or the text ribbon.yaml's labels: give it
+    ({title} in it: that label, {id}: `key`)."""
+    label = translated_label(LABELS_BY_NAME.get(key)) or own
+    if override and key in LABEL_OVERRIDES:
+        return label_text(LABEL_OVERRIDES[key], label, key)
+    return label
 
 
 def clean(text):

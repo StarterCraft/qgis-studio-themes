@@ -260,6 +260,10 @@ def dump(data, head=None):
                 lines.append("        rows:")
                 for row in group["rows"]:
                     _row(lines, row)
+    if data.get("labels"):
+        lines.append("")
+        lines.append("labels:")
+        lines += [f"  {_quoted(k)}: {_quoted(v)}" for k, v in data["labels"].items()]
     return "\n".join(lines) + "\n"
 
 
@@ -363,7 +367,8 @@ class Catalog:
         """The label the ribbon gives command `name`, and its full text."""
         action = self.action(name)
         own = studio_ribbon.clean(action.text()) if action is not None else ""
-        return studio_ribbon.label_for(name, own) or own or name, own
+        # Without the running ribbon's own labels: (the editor shows its own).
+        return studio_ribbon.label_for(name, own, override=False) or own or name, own
 
     def icon(self, name):
         action = self.action(name)
@@ -786,6 +791,8 @@ class RibbonEditorDialog(QDialog):
         self._tree_dirty = False
         self._text_dirty = False
         self._syncing = False
+        # Buttons' texts of one's own (ribbon.yaml labels:), by objectName.
+        self._overrides = {}
         self._dim = self.palette().color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text)
 
         self._views = QTabWidget()
@@ -1197,7 +1204,7 @@ class RibbonEditorDialog(QDialog):
                 origin = _t("menu button")
             else:
                 origin = _t("main window command")
-            item.setText(0, label)
+            item.setText(0, self._button_text(name))
             item.setText(1, f"{name} · {origin}")
             item.setToolTip(0, own or name)
             icon = catalog.icon(name)
@@ -1332,6 +1339,11 @@ class RibbonEditorDialog(QDialog):
         shown = tr(title, "title")
         item.setText(1, f"→ {shown}" if shown != title else "")
 
+    def _fill_data(self, data):
+        """Show ribbon.yaml's parsed `data`: its tabs and its labels:."""
+        self._overrides = dict(data.get("labels") or {})
+        self._fill_tree(tabs_from_data(data))
+
     def _fill_tree(self, tabs):
         self._syncing = True
         tree = self._tree
@@ -1393,7 +1405,10 @@ class RibbonEditorDialog(QDialog):
 
     def _tree_text(self):
         """ribbon.yaml's text of the tree."""
-        return dump(data_from_tabs(self._tabs_of_tree()))
+        data = data_from_tabs(self._tabs_of_tree())
+        if self._overrides:
+            data["labels"] = dict(self._overrides)
+        return dump(data)
 
     def _all_groups(self):
         return [g for t in _children(self._tree.invisibleRootItem()) for g in _children(t)]
@@ -1568,10 +1583,11 @@ class RibbonEditorDialog(QDialog):
         form = self._form
         dropdown = depth == ENTRY and item.data(0, ROLE)["kind"] == DROP
         label = depth in (ENTRY, ITEM) and item.data(0, ROLE)["kind"] in LABEL_KINDS
-        form.labelForField(self._title).setText(_t("Text") if label else _t("Title"))
+        button = depth == ENTRY and item.data(0, ROLE)["kind"] == CMD
+        form.labelForField(self._title).setText(_t("Text") if label or button else _t("Title"))
         form.labelForField(self._command).setText(_t("For command") if label else _t("Button command"))
         self._command.setItemText(0, _t("(none)") if label else _t("(none: the button only opens its list)"))
-        for widget, shown in ((self._title, depth in (TAB, GROUP) or dropdown or label),
+        for widget, shown in ((self._title, depth in (TAB, GROUP) or dropdown or label or button),
                               (self._shown_as, depth in (TAB, GROUP)), (self._command, dropdown or label),
                               (self._inline, depth == ITEM and self._is_menu_item(item)),
                               (self._titled, depth == ITEM and self._is_menu_item(item)),
@@ -1610,6 +1626,15 @@ class RibbonEditorDialog(QDialog):
             self._info.setText("\n".join(info))
             return
         entry = item.data(0, ROLE)
+        if button:
+            name = entry["name"]
+            self._title.setText(self._overrides.get(name, ""))
+            self._title.setPlaceholderText(self._catalog.label(name)[0])
+            self._info.setText(_t("Shown: {text}").format(text=self._button_text(name)) + "\n\n" + _t(
+                "A text of your own for this button, wherever it is on the ribbon (saved under labels:). "
+                "Empty: its usual text. {title} in it is the usual text, {id} its objectName. "
+                "Tick Large in the tree for a large button."))
+            return
         if label:
             self._title.setText(entry.get("text") or "")
             self._title.setPlaceholderText("{title}")
@@ -1683,6 +1708,32 @@ class RibbonEditorDialog(QDialog):
             self._change_dropdown(item, title=text.strip() or None)
         elif item is not None and item.data(0, ROLE) and item.data(0, ROLE).get("kind") in LABEL_KINDS:
             self._change_label(item, text=text or None)
+        elif item is not None and _depth(item) == ENTRY and item.data(0, ROLE)["kind"] == CMD:
+            self._set_override(item.data(0, ROLE)["name"], text)
+
+    def _button_text(self, name):
+        """A button's text as the ribbon will show it (its own text, if any)."""
+        usual = self._catalog.label(name)[0]
+        return studio_ribbon.label_text(self._overrides[name], usual, name) if name in self._overrides else usual
+
+    def _set_override(self, name, text):
+        """Give button `name` a text of its own (empty: its usual one); every
+        row of it in the tree follows."""
+        if text.strip():
+            self._overrides[name] = text
+        elif name in self._overrides:
+            del self._overrides[name]
+        else:
+            return
+        self._syncing = True
+        iterator = QTreeWidgetItemIterator(self._tree)
+        while iterator.value() is not None:
+            entry = iterator.value().data(0, ROLE)
+            if entry and entry.get("kind") == CMD and entry.get("name") == name:
+                iterator.value().setText(0, self._button_text(name))
+            iterator += 1
+        self._syncing = False
+        self._tree_changed()
 
     def _change_label(self, item, **changes):
         entry = item.data(0, ROLE)
@@ -1805,7 +1856,7 @@ class RibbonEditorDialog(QDialog):
                 self._show_problem(problem)
                 self._say(_t("Fix the YAML first: the visual view needs a file that reads."), error=True)
                 return
-            self._fill_tree(tabs_from_data(yaml.safe_load(text)))
+            self._fill_data(yaml.safe_load(text))
             self._text_dirty = False
             self._tree_dirty = False
         self._update_title()
@@ -1854,7 +1905,7 @@ class RibbonEditorDialog(QDialog):
         self._tree_dirty = False
         problem = check_text(text)
         if problem is None:
-            self._fill_tree(tabs_from_data(yaml.safe_load(text)))
+            self._fill_data(yaml.safe_load(text))
             self._text_dirty = False
             blocked = self._views.blockSignals(True)
             self._views.setCurrentIndex(0)
@@ -1865,7 +1916,7 @@ class RibbonEditorDialog(QDialog):
                 self._say("")
         else:
             with open(studio_ribbon.TABS_FILE, encoding="utf-8") as stream:
-                self._fill_tree(tabs_from_data(yaml.safe_load(stream)))
+                self._fill_data(yaml.safe_load(stream))
             self._text_dirty = True
             blocked = self._views.blockSignals(True)
             self._views.setCurrentIndex(1)

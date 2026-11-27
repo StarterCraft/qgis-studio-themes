@@ -1488,5 +1488,9 @@
         <source>This command has no objectName, so the ribbon cannot place it on its own: drag the menu's “everything else” to show it.</source>
         <translation>У этой команды нет objectName, поэтому лента не может поставить её отдельно: перетащите «всё остальное» этого меню, чтобы показать её.</translation>
     </message>
+    <message>
+        <source>A text of your own for this button, wherever it is on the ribbon (saved under labels:). Empty: its usual text. {title} in it is the usual text, {id} its objectName. Tick Large in the tree for a large button.</source>
+        <translation>Свой текст этой кнопки — везде, где она есть на ленте (хранится в разделе labels:). Пусто — обычный текст. {title} в нём — обычный текст, {id} — её objectName. Отметка «Крупная» в дереве — крупная кнопка.</translation>
+    </message>
 </context>
 </TS>
