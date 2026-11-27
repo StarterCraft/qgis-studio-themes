@@ -13,117 +13,21 @@ original, in a context, since one English word can need two translations
 
 A text with no translation in a language listed here: tr() gives the
 English one, label() None, so the ribbon uses QGIS's own (translated) text
-of the action instead of English. To add a language, add a dict like RU to TRANSLATIONS
-under its two-letter code.
+of the action instead of English.
+
+Translations live in i18n/studio_<code>.ts, edited in Qt Linguist (contexts
+as above). To add a language, copy i18n/studio_template.ts to
+studio_<code>.ts, set its language and translate it. A .qm compiled from it
+with lrelease, if present, is used instead of the .ts.
 """
 import functools
+import os
+import xml.etree.ElementTree as ET
 
 from qgis.core import QgsSettings
-from qgis.PyQt.QtCore import QLocale
+from qgis.PyQt.QtCore import QLocale, QTranslator
 
-RU = {
-    "title": {
-        # Tabs.
-        "Project": "Проект", "Home": "Главная", "Data": "Данные", "Layer": "Слой", "Edit": "Правка",
-        "Modify": "Изменение", "Annotate": "Аннотации", "View": "Вид", "Vector": "Вектор", "Raster": "Растр",
-        "Mesh": "Сетка", "Processing": "Обработка", "GPS": "GPS", "Plugins": "Модули", "Settings": "Настройки",
-        "Help": "Справка",
-        # Groups.
-        "Import and Export": "Импорт и экспорт", "Layouts": "Макеты", "More": "Ещё", "Navigate": "Навигация",
-        "Select": "Выделение", "Inspect": "Сведения", "Add Data": "Добавить данные", "Add Layer": "Добавить слой",
-        "Create Layer": "Создать слой", "More Data": "Ещё данные", "Copy and Paste": "Копирование",
-        "Overview": "Обзор", "Editing": "Редактирование", "Digitize": "Оцифровка", "Features": "Объекты",
-        "History": "История", "Snapping": "Прилипание", "Shapes": "Фигуры", "Advanced": "Расширенная",
-        "Transform": "Трансформация", "Rings and Parts": "Кольца и части", "Reshape": "Изменение формы",
-        "Point Symbols": "Точечные знаки", "Labels": "Подписи", "Label Tools": "Инструменты подписей",
-        "Annotations": "Аннотации", "Draw": "Рисование", "Map Annotations": "Аннотации карты",
-        "Map Views": "Карты", "Bookmarks": "Закладки", "Time": "Время", "Elevation": "Высоты",
-        "Map Display": "Отображение", "Window": "Окно", "Vector Tools": "Векторные инструменты",
-        "Vector Plugins": "Векторные модули", "Tools": "Инструменты", "Raster Tools": "Растровые инструменты",
-        "Stretch": "Растяжение", "Adjust": "Коррекция", "Raster Plugins": "Растровые модули",
-        "Calculator": "Калькулятор", "Mesh Editing": "Правка сетки", "Toolbox": "Инструменты",
-        "Results": "Результаты", "Connection": "Подключение", "Tracking": "Трек", "Display": "Отображение",
-        "Python": "Python", "Plugin Menus": "Меню модулей", "Database": "База данных", "Web": "Веб",
-        "Options": "Параметры", "Customize": "Настройка", "Profiles": "Профили", "QGIS": "QGIS",
-        "Community": "Сообщество",
-        # Groups the ribbon makes itself (Plugins tab).
-        "Menus": "Меню", "Plugin": "Модуль",
-    },
-    "label": {
-        "New": "Создать", "Open": "Открыть", "Save": "Сохранить", "New Layout": "Новый макет",
-        "Layouts": "Макеты", "Style Manager": "Менеджер стилей",
-        "Select": "Выделить", "Deselect": "Снять выделение", "Reselect": "Выделить снова",
-        "Zoom In": "Увеличить", "Zoom Out": "Уменьшить", "Full Extent": "Полный охват",
-        "Identify": "Определить", "Attribute Table": "Таблица атрибутов", "Field Calculator": "Калькулятор полей",
-        "Statistics": "Статистика", "Toolbox": "Инструменты", "Measure": "Измерить", "Map Tips": "Подсказки",
-        "Actions": "Действия",
-        "Data Source Manager": "Источники данных",
-        "Vector": "Вектор", "Raster": "Растр", "Mesh": "Сетка", "Delimited Text": "Текст с разделителями",
-        "SpatiaLite": "SpatiaLite", "Virtual": "Виртуальный", "Database": "База данных", "WMS/WMTS": "WMS/WMTS",
-        "WCS": "WCS", "WFS": "WFS", "STAC": "STAC", "Other Layer": "Другой слой",
-        "GeoPackage Layer": "Слой GeoPackage", "Shapefile": "Shapefile", "Scratch Layer": "Временный слой",
-        "Mesh Layer": "Слой сетки", "Virtual Layer": "Виртуальный слой",
-        "Toggle Editing": "Режим правки", "Save Edits": "Сохранить правки", "All Edits": "Все правки",
-        "Add Feature": "Добавить объект", "Vertex Tool": "Вершины", "Digitize Mode": "Режим оцифровки",
-        "Edit Attributes": "Изменить атрибуты", "Delete": "Удалить", "Cut": "Вырезать", "Copy": "Копировать",
-        "Paste": "Вставить", "Undo": "Отменить", "Redo": "Повторить",
-        "Advanced Digitizing": "Расширенная оцифровка",
-        "Move": "Переместить", "Rotate": "Повернуть", "Scale": "Масштабировать", "Simplify": "Упростить",
-        "Offset Curve": "Смещение линии", "Reverse Line": "Развернуть линию",
-        "Add Ring": "Добавить кольцо", "Add Part": "Добавить часть", "Fill Ring": "Заполнить кольцо",
-        "Delete Ring": "Удалить кольцо", "Delete Part": "Удалить часть",
-        "Reshape": "Изменить форму", "Chamfer/Fillet": "Фаска/скругление", "Trim/Extend": "Обрезать/продлить",
-        "Split Features": "Разрезать объекты", "Split Parts": "Разрезать части",
-        "Merge Features": "Объединить объекты", "Merge Attributes": "Объединить атрибуты",
-        "Point Symbols": "Точечные знаки",
-        "Labels": "Подписи", "Diagrams": "Диаграммы", "Pinned Labels": "Закреплённые",
-        "Unplaced Labels": "Неразмещённые", "Pin/Unpin": "Закрепить", "Show/Hide": "Показать/скрыть",
-        "Properties": "Свойства",
-        "Annotation Layer": "Слой аннотаций", "Edit Nodes": "Правка узлов", "Map Annotations": "Аннотации карты",
-        "New Map View": "Новая карта", "New 3D Map View": "Новая 3D-карта", "New Bookmark": "Новая закладка",
-        "Bookmarks": "Закладки", "Temporal Controller": "Управление временем",
-        "Raster Calculator": "Калькулятор растров", "Georeferencer": "Привязка растров",
-        "Mesh Calculator": "Калькулятор сеток",
-        "Connect": "Подключить", "Recenter": "Центрировать", "Destination Layer": "Целевой слой",
-        "Add Vertex": "Добавить вершину", "Create Feature": "Создать объект", "Reset Track": "Сбросить трек",
-        "Information": "Информация", "Settings": "Настройки", "Python Console": "Консоль Python",
-        # Menu commands and menus.
-        "Save As": "Сохранить как", "Revert": "Откатить", "Close": "Закрыть", "Exit QGIS": "Выйти",
-        "From Template": "Из шаблона", "Recent": "Недавние", "Open From": "Открыть из", "Save To": "Сохранить в",
-        "Snapping Options": "Параметры прилипания", "Export Image": "Растр…",
-        "Export PDF": "PDF…", "Export DXF": "DXF…", "Import DWG/DXF": "Импорт DWG/DXF",
-        "New Report": "Новый отчёт", "Open Layout": "Открыть макет", "Project Models": "Модели проекта",
-        "Paste As": "Вставить как", "New 3D Globe": "Новый 3D-глобус", "Manage 3D Views": "Управление 3D-картами",
-        "Bookmark Manager": "Менеджер закладок", "Elevation Profile": "Профиль высот",
-        "Manage Profiles": "Управление профилями", "Elevation Controller": "Управление высотами",
-        "Decorations": "Оформление", "Preview Mode": "Режим просмотра", "Layer Visibility": "Видимость слоёв",
-        "Panels": "Панели", "Full Screen": "Полный экран", "Hide Panels": "Скрыть панели",
-        "Map Only": "Только карта", "All Layer Types": "Все типы слоёв", "All New Layers": "Все новые слои",
-        "Embed Layers": "Внедрить слои", "Layer Definition": "Описание слоя", "Layer Properties": "Свойства слоя",
-        "Filter": "Фильтр", "Duplicate": "Дублировать", "Set Layer CRS": "Задать СК слоя",
-        "Set Project CRS": "Задать СК проекта", "Scale Visibility": "Видимость по масштабу",
-        "Save as Definition": "Сохранить описание", "Remove": "Удалить", "Copy Style": "Копировать стиль",
-        "Paste Style": "Вставить стиль", "Copy Layer": "Копировать слой", "Paste Layer": "Вставить слой",
-        "Show in Overview": "Показать в обзоре", "Show All": "Показать все", "Hide All": "Скрыть все",
-        "Reindex": "Переиндексировать",
-        "Processing": "Обработка", "Model Designer": "Конструктор моделей", "History": "История",
-        "Results Viewer": "Результаты", "Edit In-Place": "Правка на месте", "Options": "Параметры",
-        "Manage Plugins": "Управление модулями", "DB Manager": "Менеджер БД", "Query History": "История запросов",
-        "Shortcuts": "Сочетания клавиш", "Customization": "Настройка интерфейса",
-        "Custom CRS": "Пользовательская СК", "User Profiles": "Профили",
-        "Help": "Справка", "C++ API": "C++ API", "PyQGIS API": "PyQGIS API", "Plugin Help": "Справка модулей",
-        "Home Page": "Сайт QGIS", "Check Version": "Проверить версию", "About": "О программе",
-        "Report Issue": "Сообщить об ошибке", "Get Involved": "Участвовать", "Support": "Поддержка",
-        "Donate": "Пожертвовать", "Sponsors": "Спонсоры",
-    },
-    "text": {
-        "Ribbon": "Лента",
-        "Collapse the ribbon to its tabs (double-click a tab)":
-            "Свернуть ленту до вкладок (двойной щелчок по вкладке)",
-    },
-}
-
-TRANSLATIONS = {"ru": RU}
+I18N = os.path.join(os.path.dirname(__file__), "i18n")
 
 
 @functools.lru_cache(maxsize=1)
@@ -142,8 +46,44 @@ def language():
     return (name or "en").replace("-", "_").split("_")[0].lower()
 
 
+@functools.lru_cache(maxsize=1)
+def _tables():
+    """{context: {English: translation}} for QGIS's language, from
+    i18n/studio_<code>.qm (compiled by lrelease) when there is one, else
+    from i18n/studio_<code>.ts (Qt Linguist's file, read as XML). None when
+    the language has neither file."""
+    base = os.path.join(I18N, "studio_" + language())
+    if not os.path.exists(base + ".ts"):
+        return None
+    try:
+        root = ET.parse(base + ".ts").getroot()
+    except (OSError, ET.ParseError):
+        return None
+    sources = {}
+    tables = {}
+    for context in root.iter("context"):
+        name = context.findtext("name", "")
+        for message in context.iter("message"):
+            source = message.findtext("source")
+            node = message.find("translation")
+            if not source or node is None:
+                continue
+            sources.setdefault(name, []).append(source)
+            if node.get("type") not in ("unfinished", "obsolete", "vanished") and node.text:
+                tables.setdefault(name, {})[source] = node.text
+    translator = QTranslator()
+    if os.path.exists(base + ".qm") and translator.load(base + ".qm"):
+        tables = {}
+        for name, texts in sources.items():
+            for source in texts:
+                text = translator.translate(name, source)
+                if text:
+                    tables.setdefault(name, {})[source] = text
+    return tables
+
+
 def _table(context):
-    return TRANSLATIONS.get(language(), {}).get(context, {})
+    return (_tables() or {}).get(context, {})
 
 
 def tr(text, context="text"):
@@ -158,6 +98,6 @@ def label(text):
     English label. Languages with no translation here keep English labels."""
     if not text:
         return None
-    if language() not in TRANSLATIONS:
+    if _tables() is None:
         return text
     return _table("label").get(text)
