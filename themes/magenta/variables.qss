@@ -1,0 +1,50 @@
+/* =========================================================================
+ * QGIS Studio Magenta Light - Color Variables
+ * Palette: Logo magenta/pink #A92168 #D22C63 #EBA3BC #F8E1EA
+ * Format: QGIS variables.qss, `@name: value;` per line.
+ * ========================================================================= */
+
+@accent:                  #A92168;
+@accent_hover:            #BE2666;
+@accent_pressed:          #901C58;
+@icon_accent:             #981E5E;
+@accent_checked_border:   #981E5E;
+@accent_disabled:         #F2C3D3;
+@accent_indeterminate:    #CA6292;
+@accent_translucent:      rgba(169, 33, 104, 0.16);
+@bg_window:               #FBEEF3;
+@bg_base:                 #FEFAFC;
+@bg_alt:                  #FDF4F8;
+@bg_dock:                 #FAEAF0;
+@bg_statusbar:            #EFCADA;
+@bg_menu:                 #FDF8FA;
+@bg_disabled:             #F4E7EC;
+@bg_btn_status_hover:     #F5D4E0;
+@bg_pressed:              #E997B2;
+@bg_hover:                #F6D8E2;
+@bg_hover_raised:         #F4CCDA;
+@bg_indicator:            #FFFFFF;
+@bg_btn_hover:            #F2C5D5;
+@bg_selected:             #F0BACC;
+@bg_selected_active:      #EBA3BC;
+@bg_selected_inactive:    #ECE1E5;
+@bg_plugin_inactive:      #F3C8D8;
+@bg_plugin_sel_hover:     #E2799D;
+@border:                  #E4B5CC;
+@border_subtle:           #F1D5E2;
+@border_darker:           #DCA0BE;
+@border_dim:              #EBC5D7;
+@border_btn:              #E1ACC7;
+@border_hover:            #A92168;
+@border_indicator:        #CA73A0;
+@border_list_item:        #F3DAE5;
+@separator_bg:            #E9C1D4;
+@text:                    #26292B;
+@text_bright:             #141618;
+@text_dim:                #5A5F63;
+@text_disabled:           #80858A;
+@text_light:              #3C4044;
+@text_header:             #4D273D;
+@text_placeholder:        #878C90;
+@text_dark:               #FFFFFF;
+@scrollbar_handle_hover:  #CE7DA7;

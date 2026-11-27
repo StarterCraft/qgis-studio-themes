@@ -1,0 +1,50 @@
+/* =========================================================================
+ * QGIS Studio Leaf Light - Color Variables
+ * Palette: Logo greens #4F9338 #8CBA2A #B9E339 #EAF5D6
+ * Format: QGIS variables.qss, `@name: value;` per line.
+ * ========================================================================= */
+
+@accent:                  #3F7A2C;
+@accent_hover:            #669A2B;
+@accent_pressed:          #366825;
+@icon_accent:             #396E28;
+@accent_checked_border:   #396E28;
+@accent_disabled:         #D2ED7E;
+@accent_indeterminate:    #7CAE32;
+@accent_translucent:      rgba(63, 122, 44, 0.16);
+@bg_window:               #F3FAE8;
+@bg_base:                 #FCFEF9;
+@bg_alt:                  #F8FCF1;
+@bg_dock:                 #F0F8E2;
+@bg_statusbar:            #D7E9C3;
+@bg_menu:                 #FAFCF5;
+@bg_disabled:             #ECF3E2;
+@bg_btn_status_hover:     #DFF2AB;
+@bg_pressed:              #C5DD92;
+@bg_hover:                #E2F3B4;
+@bg_hover_raised:         #D9F099;
+@bg_indicator:            #FFFFFF;
+@bg_btn_hover:            #D3ED88;
+@bg_selected:             #CAEA6E;
+@bg_selected_active:      #B9E339;
+@bg_selected_inactive:    #E5EBDC;
+@bg_plugin_inactive:      #D6EE90;
+@bg_plugin_sel_hover:     #A9D534;
+@border:                  #C5DDB7;
+@border_subtle:           #DFEED3;
+@border_darker:           #B5D3A5;
+@border_dim:              #D2E5C5;
+@border_btn:              #BFD9B0;
+@border_hover:            #3F7A2C;
+@border_indicator:        #91BC7E;
+@border_list_item:        #E3F0D6;
+@separator_bg:            #CFE3C1;
+@text:                    #26292B;
+@text_bright:             #141618;
+@text_dim:                #5A5F63;
+@text_disabled:           #80858A;
+@text_light:              #3C4044;
+@text_header:             #2E412B;
+@text_placeholder:        #878C90;
+@text_dark:               #FFFFFF;
+@scrollbar_handle_hover:  #99C187;

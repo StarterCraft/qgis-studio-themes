@@ -1,0 +1,50 @@
+/* =========================================================================
+ * QGIS Studio Azure Light - Color Variables
+ * Palette: Logo blue #0072B0 #0093DD #9FD3F0 #E1F1FA
+ * Format: QGIS variables.qss, `@name: value;` per line.
+ * ========================================================================= */
+
+@accent:                  #0072B0;
+@accent_hover:            #0082C6;
+@accent_pressed:          #006196;
+@icon_accent:             #00679E;
+@accent_checked_border:   #00679E;
+@accent_disabled:         #C1E2F5;
+@accent_indeterminate:    #50A2D0;
+@accent_translucent:      rgba(0, 114, 176, 0.16);
+@bg_window:               #EEF7FC;
+@bg_base:                 #FAFDFE;
+@bg_alt:                  #F4FAFD;
+@bg_dock:                 #EAF5FC;
+@bg_statusbar:            #C6E2F1;
+@bg_menu:                 #F8FCFE;
+@bg_disabled:             #E7F0F5;
+@bg_btn_status_hover:     #D2EAF8;
+@bg_pressed:              #83CAEE;
+@bg_hover:                #D6ECF8;
+@bg_hover_raised:         #CAE7F7;
+@bg_indicator:            #FFFFFF;
+@bg_btn_hover:            #C3E3F5;
+@bg_selected:             #B7DEF4;
+@bg_selected_active:      #9FD3F0;
+@bg_selected_inactive:    #E1E9ED;
+@bg_plugin_inactive:      #C6E5F6;
+@bg_plugin_sel_hover:     #67BDE9;
+@border:                  #ABD2E7;
+@border_subtle:           #D1E7F3;
+@border_darker:           #94C4DF;
+@border_dim:              #BEDCED;
+@border_btn:              #A2CCE4;
+@border_hover:            #0072B0;
+@border_indicator:        #5FA7CE;
+@border_list_item:        #D6EAF4;
+@separator_bg:            #BADAEB;
+@text:                    #26292B;
+@text_bright:             #141618;
+@text_dim:                #5A5F63;
+@text_disabled:           #80858A;
+@text_light:              #3C4044;
+@text_header:             #1B3F53;
+@text_placeholder:        #878C90;
+@text_dark:               #FFFFFF;
+@scrollbar_handle_hover:  #6BAED2;

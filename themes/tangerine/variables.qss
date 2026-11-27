@@ -1,0 +1,50 @@
+/* =========================================================================
+ * QGIS Studio Tangerine Light - Color Variables
+ * Palette: Logo orange/coral #D35E4F #F5783F #F9BE9C #FDEBDF
+ * Format: QGIS variables.qss, `@name: value;` per line.
+ * ========================================================================= */
+
+@accent:                  #B9481E;
+@accent_hover:            #D7602E;
+@accent_pressed:          #9D3D1A;
+@icon_accent:             #A6411B;
+@accent_checked_border:   #A6411B;
+@accent_disabled:         #FBD5BF;
+@accent_indeterminate:    #D9835D;
+@accent_translucent:      rgba(185, 72, 30, 0.16);
+@bg_window:               #FEF4ED;
+@bg_base:                 #FFFCFA;
+@bg_alt:                  #FEF8F4;
+@bg_dock:                 #FEF1E9;
+@bg_statusbar:            #F8DACE;
+@bg_menu:                 #FEFAF7;
+@bg_disabled:             #F6EDE6;
+@bg_btn_status_hover:     #FCE1D1;
+@bg_pressed:              #FABC9F;
+@bg_hover:                #FCE4D5;
+@bg_hover_raised:         #FCDCC9;
+@bg_indicator:            #FFFFFF;
+@bg_btn_hover:            #FBD6C0;
+@bg_selected:             #FACEB4;
+@bg_selected_active:      #F9BE9C;
+@bg_selected_inactive:    #EFE6E0;
+@bg_plugin_inactive:      #FCD9C4;
+@bg_plugin_sel_hover:     #F8A67B;
+@border:                  #F2CAC1;
+@border_subtle:           #F9E2DA;
+@border_darker:           #EEBBB1;
+@border_dim:              #F5D6CD;
+@border_btn:              #F0C4BA;
+@border_hover:            #B9481E;
+@border_indicator:        #E49A8E;
+@border_list_item:        #FAE5DD;
+@separator_bg:            #F5D3CA;
+@text:                    #26292B;
+@text_bright:             #141618;
+@text_dim:                #5A5F63;
+@text_disabled:           #80858A;
+@text_light:              #3C4044;
+@text_header:             #523227;
+@text_placeholder:        #878C90;
+@text_dark:               #FFFFFF;
+@scrollbar_handle_hover:  #E6A296;
