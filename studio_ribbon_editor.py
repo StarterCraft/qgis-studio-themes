@@ -1432,8 +1432,8 @@ class RibbonEditorDialog(QDialog):
                 item.setFont(0, font)
                 found = catalog.found(menu)
             else:
-                label, own = catalog.label(name)
-                item.setText(0, label)
+                _label, own = catalog.label(name)
+                item.setText(0, self._button_text(name))
                 kind = _t("submenu") if name in catalog.menu_titles else _t("command")
                 item.setText(1, f"{name} · {kind}")
                 item.setToolTip(0, own or name)
@@ -1763,12 +1763,14 @@ class RibbonEditorDialog(QDialog):
         dropdown = depth == ENTRY and item.data(0, ROLE)["kind"] == DROP
         label = depth in (ENTRY, ITEM) and item.data(0, ROLE)["kind"] in LABEL_KINDS
         button = depth == ENTRY and item.data(0, ROLE)["kind"] == CMD
+        listed = depth == ITEM and self._is_renamable(item)
+        button = button or listed
         form.labelForField(self._title).setText(_t("Text") if label or button else _t("Title"))
         form.labelForField(self._command).setText(_t("For command") if label else _t("Button command"))
         self._command.setItemText(0, _t("(none)") if label else _t("(none: the button only opens its list)"))
         for widget, shown in ((self._title, depth in (TAB, GROUP) or dropdown or label or button),
                               (self._shown_as, depth in (TAB, GROUP)), (self._command, dropdown or label),
-                              (self._icon_row, button or (dropdown and bool(entry_key(item.data(0, ROLE))))),
+                              (self._icon_row, (button and not listed) or (dropdown and bool(entry_key(item.data(0, ROLE))))),
                               (self._inline, depth == ITEM and self._is_menu_item(item)),
                               (self._titled, depth == ITEM and self._is_menu_item(item)),
                               (self._layout, depth == GROUP)):
@@ -1796,8 +1798,17 @@ class RibbonEditorDialog(QDialog):
             self._info.setText("\n".join(info))
             return
         entry = item.data(0, ROLE)
-        if button or dropdown:
+        if (button and not listed) or dropdown:
             self._show_icon(entry_key(entry))
+        if listed:
+            name = entry["name"]
+            self._title.setText(self._overrides.get(name, ""))
+            self._title.setPlaceholderText(self._catalog.label(name)[0])
+            self._info.setText(_t("Shown: {text}").format(text=self._button_text(name)) + "\n\n" + _t(
+                "A text of your own for this item, wherever it is on the ribbon (saved under labels:). "
+                "Empty: its usual text. {title} in it is the usual text, {id} its objectName. "
+                "Drag it onto a group to make it a button again."))
+            return
         if button:
             name = entry["name"]
             self._title.setText(self._overrides.get(name, ""))
@@ -1850,6 +1861,14 @@ class RibbonEditorDialog(QDialog):
             self._command.setEditText(name)
         self._command.blockSignals(blocked)
 
+    @staticmethod
+    def _is_renamable(item):
+        """A dropdown list's command or submenu (not a line, nor a menu's
+        commands in the list): it takes a text of its own."""
+        entry = item.data(0, ROLE) or {}
+        name = entry.get("name") or ""
+        return entry.get("kind") == LISTED and name != SEPARATOR and not item_menu(name)
+
     def _is_menu_item(self, item):
         name = item.data(0, ROLE).get("name") or ""
         return bool(item_menu(name)) or name in self._catalog.menu_titles
@@ -1880,7 +1899,8 @@ class RibbonEditorDialog(QDialog):
             self._change_dropdown(item, title=text.strip() or None)
         elif item is not None and item.data(0, ROLE) and item.data(0, ROLE).get("kind") in LABEL_KINDS:
             self._change_label(item, text=text or None)
-        elif item is not None and _depth(item) == ENTRY and item.data(0, ROLE)["kind"] == CMD:
+        elif item is not None and ((_depth(item) == ENTRY and item.data(0, ROLE)["kind"] == CMD)
+                                   or (_depth(item) == ITEM and self._is_renamable(item))):
             self._set_override(item.data(0, ROLE)["name"], text)
 
     def _button_icon(self, name):
@@ -1955,7 +1975,7 @@ class RibbonEditorDialog(QDialog):
         iterator = QTreeWidgetItemIterator(self._tree)
         while iterator.value() is not None:
             entry = iterator.value().data(0, ROLE)
-            if entry and entry.get("kind") == CMD and entry.get("name") == name:
+            if entry and entry.get("kind") in (CMD, LISTED) and entry.get("name") == name:
                 iterator.value().setText(0, self._button_text(name))
             iterator += 1
         self._syncing = False

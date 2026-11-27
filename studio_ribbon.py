@@ -1923,7 +1923,7 @@ class StudioRibbon(QObject):
                 fallback = ICON_FALLBACKS.get(name) or (GENERIC_MENU_ICON if menu_of(action) is not None else None)
                 if fallback is not None and self._icons.adopt(action, fallback):
                     self._adopted.append(action)
-            menu.addAction(action)
+            menu.addAction(self._renamed_action(action, name, menu))
 
     def _add_contents(self, menu, name, titled=False):
         """Menu `name`'s commands, as it shows them now, into `menu` between
@@ -1949,6 +1949,27 @@ class StudioRibbon(QObject):
             elif item.isVisible() and not isinstance(item, QWidgetAction):
                 menu.addAction(self._short_path_action(item, menu))
         menu.addSeparator()
+
+    @staticmethod
+    def _renamed_action(action, name, menu):
+        """`action` itself, or, when ribbon.yaml's labels: give `name` a
+        text of its own, a stand-in with that text (QGIS's own menus keep
+        theirs): a click runs `action`, a submenu stays one."""
+        if name not in LABEL_OVERRIDES:
+            return action
+        text = label_text(LABEL_OVERRIDES[name], clean(action.text()), name)
+        stand_in = QAction(action.icon(), text, menu)
+        stand_in.setToolTip(action.toolTip())
+        stand_in.setStatusTip(action.statusTip())
+        stand_in.setEnabled(action.isEnabled())
+        sub = menu_of(action)
+        if sub is not None:
+            stand_in.setMenu(sub)
+        else:
+            stand_in.setCheckable(action.isCheckable())
+            stand_in.setChecked(action.isChecked())
+            stand_in.triggered.connect(lambda _checked=False: action.trigger())
+        return stand_in
 
     @staticmethod
     def _short_path_action(item, menu):

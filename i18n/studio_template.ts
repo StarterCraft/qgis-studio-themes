@@ -1377,6 +1377,10 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>A text of your own for this item, wherever it is on the ribbon (saved under labels:). Empty: its usual text. {title} in it is the usual text, {id} its objectName. Drag it onto a group to make it a button again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>An item of the dropdown's list. Drag it onto a group to make it a button again.</source>
         <translation type="unfinished"></translation>
     </message>

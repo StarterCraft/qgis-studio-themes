@@ -1377,6 +1377,10 @@
         <translation>(подпись самой команды)</translation>
     </message>
     <message>
+        <source>A text of your own for this item, wherever it is on the ribbon (saved under labels:). Empty: its usual text. {title} in it is the usual text, {id} its objectName. Drag it onto a group to make it a button again.</source>
+        <translation>Свой текст этого пункта — везде, где он есть на ленте (хранится в разделе labels:). Пусто — обычный текст. {title} в нём — обычный текст, {id} — его objectName. Перетащите пункт на группу, чтобы снова сделать его кнопкой.</translation>
+    </message>
+    <message>
         <source>An item of the dropdown's list. Drag it onto a group to make it a button again.</source>
         <translation>Пункт выпадающего списка. Перетащите его на группу, чтобы он снова стал кнопкой.</translation>
     </message>
