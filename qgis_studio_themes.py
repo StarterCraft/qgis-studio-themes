@@ -2779,6 +2779,11 @@ class QgisStudioThemesPlugin:
         "Pro Light": "pro",
         "Orange Light": "light_orange",
         "QGIS Light": "qgis_light",
+        "Sage Light": "sage",
+        "Ochre Light": "ochre",
+        "Slate Light": "slate",
+        "Coral Light": "coral",
+        "Plum Dark": "plum",
     }
     # Former display names -> current ones (kept so saved settings follow).
     RENAMED = {

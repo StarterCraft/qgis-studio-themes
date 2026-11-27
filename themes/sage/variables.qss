@@ -1,0 +1,50 @@
+/* =========================================================================
+ * QGIS Studio Sage Light - Color Variables
+ * Palette: Teal row #63AD9E #91CABD #C2E2D7 #E2EEE5
+ * Format: QGIS variables.qss, `@name: value;` per line.
+ * ========================================================================= */
+
+@accent:                  #2F6F62;
+@accent_hover:            #609C90;
+@accent_pressed:          #285E53;
+@icon_accent:             #2A6458;
+@accent_checked_border:   #2A6458;
+@accent_disabled:         #D7ECE5;
+@accent_indeterminate:    #78A89C;
+@accent_translucent:      rgba(47, 111, 98, 0.16);
+@bg_window:               #EFF6F1;
+@bg_base:                 #FBFCFB;
+@bg_alt:                  #F5F9F6;
+@bg_dock:                 #EBF3ED;
+@bg_statusbar:            #D3E6DC;
+@bg_menu:                 #F8FBF8;
+@bg_disabled:             #E8EFEA;
+@bg_btn_status_hover:     #DFEFE8;
+@bg_pressed:              #C5E2DA;
+@bg_hover:                #E2F0E9;
+@bg_hover_raised:         #DBEDE5;
+@bg_indicator:            #FFFFFF;
+@bg_btn_hover:            #D6EBE3;
+@bg_selected:             #D0E8DF;
+@bg_selected_active:      #C2E2D7;
+@bg_selected_inactive:    #E2E8E3;
+@bg_plugin_inactive:      #D8ECE4;
+@bg_plugin_sel_hover:     #B1DACE;
+@border:                  #C8E2DA;
+@border_subtle:           #DEEDE7;
+@border_darker:           #BADAD1;
+@border_dim:              #D3E7E0;
+@border_btn:              #C2DFD6;
+@border_hover:            #2F6F62;
+@border_indicator:        #9BCABF;
+@border_list_item:        #E1EFE9;
+@separator_bg:            #D0E6DF;
+@text:                    #26292B;
+@text_bright:             #141618;
+@text_dim:                #5A5F63;
+@text_disabled:           #80858A;
+@text_light:              #3C4044;
+@text_header:             #293E3C;
+@text_placeholder:        #878C90;
+@text_dark:               #FFFFFF;
+@scrollbar_handle_hover:  #A2CEC3;

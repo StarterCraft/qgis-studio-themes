@@ -1,0 +1,60 @@
+/* =========================================================================
+ * QGIS Studio Plum Dark - Color Variables
+ * Palette: Purple row #8E4787 #B77CA9 #D19AB7 #EDD6E2
+ * Format: QGIS variables.qss, `@name: value;` per line.
+ * ========================================================================= */
+
+@accent:                  #B77CA9;
+@accent_hover:            #D19AB7;
+@accent_pressed:          #926387;
+@icon_accent:             #D19AB7;
+@accent_checked_border:   #A57098;
+@accent_disabled:         #562F52;
+@accent_indeterminate:    #A26298;
+@accent_translucent:      rgba(183, 124, 169, 0.18);
+@bg_window:               #281C26;
+@bg_base:                 #141013;
+@bg_alt:                  #171416;
+@bg_dock:                 #251A23;
+@bg_statusbar:            #120F12;
+@bg_menu:                 #2E232D;
+@bg_disabled:             #261B24;
+@bg_btn_status_hover:     #372235;
+@bg_pressed:              #221820;
+@bg_hover:                #3A2437;
+@bg_hover_raised:         #43273F;
+@bg_indicator:            #120F12;
+@bg_btn_hover:            #472943;
+@bg_selected:             #562F52;
+@bg_selected_active:      #653660;
+@bg_selected_inactive:    #42273E;
+@bg_plugin_inactive:      #4C2B48;
+@bg_plugin_sel_hover:     #60345B;
+@border:                  #3E333C;
+@border_subtle:           #1C141B;
+@border_darker:           #160F15;
+@border_dim:              #332731;
+@border_btn:              #423740;
+@border_hover:            #704C68;
+@border_indicator:        #4F454D;
+@border_list_item:        #221820;
+@separator_bg:            #181117;
+@text:                    #ECE4EA;
+@text_bright:             #FFFFFF;
+@text_dim:                #B3A8B0;
+@text_disabled:           #7A7078;
+@text_light:              #D8CED5;
+@text_header:             #EDD6E2;
+@text_placeholder:        #7E747C;
+@text_dark:               #140F13;
+@scrollbar_handle_hover:  #704C68;
+
+/* Structural lines and checked tool buttons, tuned for a dark window. */
+@line:                   mix(@bg_window, @text, 0.17);
+@ribbon_page:            mix(@bg_window, @text, 0.035);
+@tool_checked:           mix(@bg_window, @accent, 0.36);
+@tool_checked_hover:     mix(@bg_window, @accent, 0.44);
+@icon_disabled:          mix(@bg_window, @icon, 0.34);
+@menu_edge:              mix(@bg_menu, #000000, 0.55);
+@menu_hover:             mix(@bg_menu, @accent, 0.28);
+

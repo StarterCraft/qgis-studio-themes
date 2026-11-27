@@ -1,0 +1,50 @@
+/* =========================================================================
+ * QGIS Studio Coral Light - Color Variables
+ * Palette: Red row #922B1E #DC4B43 #E5999A #F8D2CE
+ * Format: QGIS variables.qss, `@name: value;` per line.
+ * ========================================================================= */
+
+@accent:                  #922B1E;
+@accent_hover:            #B73B30;
+@accent_pressed:          #7C251A;
+@icon_accent:             #83271B;
+@accent_checked_border:   #83271B;
+@accent_disabled:         #EEBDBD;
+@accent_indeterminate:    #BC625C;
+@accent_translucent:      rgba(146, 43, 30, 0.16);
+@bg_window:               #FBE6E4;
+@bg_base:                 #FEF8F8;
+@bg_alt:                  #FDEFEE;
+@bg_dock:                 #FAE0DD;
+@bg_statusbar:            #ECBEB9;
+@bg_menu:                 #FDF4F3;
+@bg_disabled:             #F4E0DE;
+@bg_btn_status_hover:     #F3CBCA;
+@bg_pressed:              #EDA09C;
+@bg_hover:                #F4CFCE;
+@bg_hover_raised:         #F1C3C3;
+@bg_indicator:            #FFFFFF;
+@bg_btn_hover:            #EFBCBB;
+@bg_selected:             #ECB0B0;
+@bg_selected_active:      #E5999A;
+@bg_selected_inactive:    #ECDAD8;
+@bg_plugin_inactive:      #F0C0BF;
+@bg_plugin_sel_hover:     #E27E7C;
+@border:                  #DEB2AD;
+@border_subtle:           #EED0CC;
+@border_darker:           #D39F99;
+@border_dim:              #E6C1BC;
+@border_btn:              #D9AAA5;
+@border_hover:            #922B1E;
+@border_indicator:        #BC766D;
+@border_list_item:        #F0D3D0;
+@separator_bg:            #E4BDB8;
+@text:                    #26292B;
+@text_bright:             #141618;
+@text_dim:                #5A5F63;
+@text_disabled:           #80858A;
+@text_light:              #3C4044;
+@text_header:             #462A27;
+@text_placeholder:        #878C90;
+@text_dark:               #FFFFFF;
+@scrollbar_handle_hover:  #C17F77;

@@ -1,0 +1,50 @@
+/* =========================================================================
+ * QGIS Studio Ochre Light - Color Variables
+ * Palette: Ochre/orange row #B28024 #D08C2C #F0C391 #F8EBDF
+ * Format: QGIS variables.qss, `@name: value;` per line.
+ * ========================================================================= */
+
+@accent:                  #8A5F14;
+@accent_hover:            #AD7620;
+@accent_pressed:          #755111;
+@icon_accent:             #7C5612;
+@accent_checked_border:   #7C5612;
+@accent_disabled:         #F5D8B8;
+@accent_indeterminate:    #BD9152;
+@accent_translucent:      rgba(138, 95, 20, 0.16);
+@bg_window:               #FBF4ED;
+@bg_base:                 #FEFCFA;
+@bg_alt:                  #FDF8F4;
+@bg_dock:                 #FAF1E9;
+@bg_statusbar:            #F0DEC9;
+@bg_menu:                 #FDFAF7;
+@bg_disabled:             #F4EDE6;
+@bg_btn_status_hover:     #F7E3CD;
+@bg_pressed:              #E8C596;
+@bg_hover:                #F8E5D1;
+@bg_hover_raised:         #F6DEC4;
+@bg_indicator:            #FFFFFF;
+@bg_btn_hover:            #F5D9BA;
+@bg_selected:             #F3D2AD;
+@bg_selected_active:      #F0C391;
+@bg_selected_inactive:    #ECE6E0;
+@bg_plugin_inactive:      #F6DCBF;
+@bg_plugin_sel_hover:     #E5B06E;
+@border:                  #E7D4B5;
+@border_subtle:           #F2E6D5;
+@border_darker:           #DFC8A1;
+@border_dim:              #ECDDC5;
+@border_btn:              #E4CFAD;
+@border_hover:            #8A5F14;
+@border_indicator:        #CFAE74;
+@border_list_item:        #F4E8D9;
+@separator_bg:            #EBDAC1;
+@text:                    #26292B;
+@text_bright:             #141618;
+@text_dim:                #5A5F63;
+@text_disabled:           #80858A;
+@text_light:              #3C4044;
+@text_header:             #443924;
+@text_placeholder:        #878C90;
+@text_dark:               #FFFFFF;
+@scrollbar_handle_hover:  #D3B47E;
