@@ -1426,7 +1426,9 @@ QToolTip {
     background-color: @bg_menu;
     color: @text;
     border: 1px solid @menu_edge;
-    padding: 6px 10px;
+    padding: 2px 2px;
+    border-bottom-left-radius: @radius;
+    border-bottom-right-radius: @radius;
 }
 QRubberBand {
     background-color: @accent_translucent;
