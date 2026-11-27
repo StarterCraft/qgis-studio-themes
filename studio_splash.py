@@ -183,7 +183,9 @@ def apply(tokens, theme_name, theme_folder):
             owned = "created"
         else:
             current = root.get("splashPath")
-            if current and not _ours(current):
+            # A splash of the user's own is kept; a path with no
+            # splash.png in it (QGIS then shows a small empty box) is not.
+            if current and not _ours(current) and (Path(current) / "splash.png").is_file():
                 _log(f"Theme splash: the customization file already names a splash ({current}); not changed.")
                 return False
             if root.get("enabled") != "true":
