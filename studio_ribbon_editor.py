@@ -1073,9 +1073,6 @@ class RibbonEditorDialog(QDialog):
         for value, text in self.LAYOUTS:
             self._layout.addItem(_t(text), value)
         self._layout.currentIndexChanged.connect(self._layout_changed)
-        self._large = QListWidget()
-        self._large.setMaximumHeight(120)
-        self._large.itemChanged.connect(self._large_list_changed)
         self._command = QComboBox()
         self._command.setEditable(True)
         self._command.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
@@ -1114,7 +1111,6 @@ class RibbonEditorDialog(QDialog):
         form.addRow(_t("Icon"), self._icon_row)
         form.addRow(_t("Shown as"), self._shown_as)
         form.addRow(_t("Buttons"), self._layout)
-        form.addRow(_t("Large buttons"), self._large)
         form.addRow(self._info)
         self._show_properties(None)
         return box
@@ -1756,7 +1752,7 @@ class RibbonEditorDialog(QDialog):
                               (self._icon_row, button or (dropdown and bool(entry_key(item.data(0, ROLE))))),
                               (self._inline, depth == ITEM and self._is_menu_item(item)),
                               (self._titled, depth == ITEM and self._is_menu_item(item)),
-                              (self._layout, depth == GROUP), (self._large, depth == GROUP)):
+                              (self._layout, depth == GROUP)):
             form.setRowVisible(widget, shown)
         if depth is None:
             self._info.setText(_t("Choose a tab, group or button to see its properties."))
@@ -1774,16 +1770,6 @@ class RibbonEditorDialog(QDialog):
             blocked = self._layout.blockSignals(True)
             self._layout.setCurrentIndex(max(0, self._layout.findData(data["layout"])))
             self._layout.blockSignals(blocked)
-            self._syncing = True
-            self._large.clear()
-            for name in self._candidates(item) + [n for n in data["large"] if n not in self._candidates(item)]:
-                label, _own = self._catalog.label(name)
-                row = QListWidgetItem(f"{label}  ({name})")
-                row.setData(ROLE, name)
-                row.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
-                row.setCheckState(Qt.CheckState.Checked if name in data["large"] else Qt.CheckState.Unchecked)
-                self._large.addItem(row)
-            self._syncing = False
             info = []
             if data["rows"]:
                 rows = " | ".join(", ".join(r) for r in data["rows"])
@@ -2008,26 +1994,6 @@ class RibbonEditorDialog(QDialog):
         data = item.data(0, ROLE)
         data["layout"] = self._layout.currentData()
         item.setData(0, ROLE, data)
-        self._tree_changed()
-
-    def _large_list_changed(self, row):
-        if self._syncing:
-            return
-        group = self._tree.currentItem()
-        if group is None or _depth(group) != GROUP:
-            return
-        data = group.data(0, ROLE)
-        name = row.data(ROLE)
-        large = [n for n in data["large"] if n != name]
-        if row.checkState() == Qt.CheckState.Checked:
-            large.append(name)
-        data["large"] = large
-        group.setData(0, ROLE, data)
-        self._syncing = True
-        for child in _children(group):
-            if entry_key(child.data(0, ROLE)) == name:
-                child.setCheckState(2, row.checkState())
-        self._syncing = False
         self._tree_changed()
 
     # ---- The text -------------------------------------------------------------
