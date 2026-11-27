@@ -34,7 +34,7 @@ from qgis.PyQt import sip
 from qgis.PyQt.QtCore import QItemSelectionModel, QMimeData, QRegularExpression, Qt, pyqtSignal
 from qgis.PyQt.QtGui import QBrush, QColor, QFont, QFontDatabase, QIcon, QPalette, QSyntaxHighlighter, QTextCharFormat, QTextCursor
 from qgis.PyQt.QtWidgets import (
-    QAbstractItemView, QAction, QCheckBox, QComboBox, QDialog, QFormLayout, QGroupBox, QHBoxLayout, QHeaderView, QLabel,
+    QAbstractItemView, QAction, QApplication, QCheckBox, QComboBox, QDialog, QFormLayout, QGroupBox, QHBoxLayout, QHeaderView, QLabel,
     QLineEdit, QListWidget, QListWidgetItem, QMenu, QMessageBox, QPlainTextEdit, QPushButton, QSplitter, QTabWidget, QToolBar,
     QTreeWidget, QTreeWidgetItem, QTreeWidgetItemIterator, QVBoxLayout, QWidget, QWidgetAction,
 )
@@ -419,6 +419,25 @@ def listed(entry):
     return {"kind": LISTED, "name": entry["name"]}
 
 
+def _share_columns(tree, shares):
+    """Columns as fixed shares of the tree's width (the last one takes the
+    rest, or fits its title when sized to contents), so they line up
+    whatever the window's size."""
+    header = tree.header()
+    width = tree.viewport().width()
+    last = header.count() - 1
+    if header.sectionResizeMode(last) == QHeaderView.ResizeMode.ResizeToContents:
+        width -= header.sectionSize(last)
+        last -= 1
+    header.setStretchLastSection(False)
+    used = 0
+    for column, share in enumerate(shares):
+        size = int(width * share)
+        header.resizeSection(column, size)
+        used += size
+    header.resizeSection(last, max(40, width - used))
+
+
 def _depth(item):
     depth = 0
     while item.parent() is not None:
@@ -445,8 +464,11 @@ class _Palette(QTreeWidget):
         self.setDefaultDropAction(Qt.DropAction.CopyAction)
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.setUniformRowHeights(True)
-        # The labels get the room; objectNames show what is left.
-        self.header().resizeSection(0, 290)
+        _share_columns(self, (0.62,))
+
+    def resizeEvent(self, event):  # pylint: disable=invalid-name
+        super().resizeEvent(event)
+        _share_columns(self, (0.62,))
 
     def mimeTypes(self):  # pylint: disable=invalid-name
         return [MIME]
@@ -501,11 +523,13 @@ class _RibbonTree(QTreeWidget):
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setUniformRowHeights(True)
-        self.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        self.header().setStretchLastSection(False)
-        self.header().resizeSection(1, 230)
-        self.header().resizeSection(2, 60)
+        self.header().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        _share_columns(self, (0.55,))
         self.itemDoubleClicked.connect(self._double_clicked)
+
+    def resizeEvent(self, event):  # pylint: disable=invalid-name
+        super().resizeEvent(event)
+        _share_columns(self, (0.55,))
 
     # Titles are edited in place (double-click or F2), the other columns not.
     def _double_clicked(self, item, _column):
@@ -782,7 +806,7 @@ class RibbonEditorDialog(QDialog):
     def __init__(self, iface, parent=None):
         super().__init__(parent)
         self.setWindowTitle(_t("Ribbon Editor"))
-        self.resize(1180, 760)
+        self._fit_screen(parent)
         self._catalog = Catalog(iface.mainWindow())
         self._path = studio_ribbon.user_tabs_file()
         # The text last loaded or saved, and whether each view changed
@@ -830,6 +854,17 @@ class RibbonEditorDialog(QDialog):
         layout.addWidget(where)
         layout.addLayout(buttons)
         self._load()
+
+    def _fit_screen(self, parent):
+        """At most 1180 x 760, and no more than nine tenths of the screen's
+        free width and four fifths of its height (the window's title and the
+        taskbar stay clear), centred on it."""
+        screen = (parent.screen() if parent is not None else None) or QApplication.primaryScreen()
+        free = screen.availableGeometry()
+        width = min(1180, int(free.width() * 0.9))
+        height = min(760, int(free.height() * 0.8))
+        self.resize(width, height)
+        self.move(free.x() + (free.width() - width) // 2, free.y() + (free.height() - height) // 2)
 
     # ---- Building the views -----------------------------------------------
 
