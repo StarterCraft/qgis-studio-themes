@@ -88,10 +88,10 @@ RU = {
         "Add Vertex": "Добавить вершину", "Create Feature": "Создать объект", "Reset Track": "Сбросить трек",
         "Information": "Информация", "Settings": "Настройки", "Python Console": "Консоль Python",
         # Menu commands and menus.
-        "Save As": "Сохранить как", "Revert": "Вернуть", "Close": "Закрыть", "Exit QGIS": "Выход",
+        "Save As": "Сохранить как", "Revert": "Откатить", "Close": "Закрыть", "Exit QGIS": "Выйти",
         "From Template": "Из шаблона", "Recent": "Недавние", "Open From": "Открыть из", "Save To": "Сохранить в",
-        "Snapping Options": "Параметры прилипания", "Export Image": "Экспорт в изображение",
-        "Export PDF": "Экспорт в PDF", "Export DXF": "Экспорт в DXF", "Import DWG/DXF": "Импорт DWG/DXF",
+        "Snapping Options": "Параметры прилипания", "Export Image": "Растр…",
+        "Export PDF": "PDF…", "Export DXF": "DXF…", "Import DWG/DXF": "Импорт DWG/DXF",
         "New Report": "Новый отчёт", "Open Layout": "Открыть макет", "Project Models": "Модели проекта",
         "Paste As": "Вставить как", "New 3D Globe": "Новый 3D-глобус", "Manage 3D Views": "Управление 3D-картами",
         "Bookmark Manager": "Менеджер закладок", "Elevation Profile": "Профиль высот",
