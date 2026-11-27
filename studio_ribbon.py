@@ -34,8 +34,10 @@ toolbars change, so startup builds one page and nothing runs while the
 ribbon simply shows; all styling comes from the theme's stylesheet
 (style.qss, object names and the studioRibbon property).
 """
+import os
 import re
 
+import yaml
 from qgis.core import QgsSettings
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import QEvent, QObject, QRect, QSize, Qt, QTimer
@@ -168,201 +170,48 @@ AUTO_LARGE = 3
 # The most used commands of icon-only groups: labelled small buttons, in
 # their own column(s) before the group's other (icon-only) buttons.
 LABELLED_SMALL = frozenset(("mActionZoomIn", "mActionZoomOut", "mActionZoomFullExtent"))
-# A group: (title, sources, large, layout[, rows]). Sources are (toolbar
-# objectName, action objectNames, or None for those of the toolbar no
-# group names); ("@", objectNames) for actions of the main window not on
-# a toolbar (Raster Calculator...) or menus, shown as a button opening the
-# menu; or ("menu", menu objectNames) for what those menus hold that the
-# ribbon has nowhere else (see StudioRibbon._covered: QGIS's commands
-# missed here, and what plugins add). Large: objectNames shown as large
-# buttons. Rows: explicit rows of small buttons (lists of objectNames)
-# instead of columns of ROWS. Every command of QGIS's menus is on some tab,
+# The tabs, in order: ribbon.yaml beside this file (its header describes the
+# format), read into (title, groups). A group: (title, sources, large,
+# layout[, rows]). Sources are (toolbar objectName, action objectNames, or
+# None for those of the toolbar no group names); ("@", objectNames) for
+# actions of the main window not on a toolbar or menus; or ("menu", menu
+# objectNames) for what those menus hold that the ribbon has nowhere else
+# (see StudioRibbon._covered). Every command of QGIS's menus is on some tab,
 # so the menu bar is folded away (set_menu_bar_folded).
-# QGIS's Select and Deselect tool buttons, as large split buttons: a click
-# runs the tool last chosen, the arrow picks another; and Reselect, only in
-# Edit > Select otherwise (that menu is left out, SKIPPED_MENU_ITEMS). On
-# Home and also on Edit and Modify, whose tools work on selected features.
-SELECT_TOOLS = ("mSelectionToolBar", ("ActionSelect", "ActionDeselection"))
-RESELECT = ("@", ("mActionReselect",))
-SELECT_LARGE = ("ActionSelect", "ActionDeselection")
-SELECT_GROUP = ("Select", (SELECT_TOOLS, RESELECT), SELECT_LARGE, LABELS)
-TABS = (
-    ("Project", (
-        ("Project", (("@", (
-            "mActionNewProject", "mActionOpenProject", "mActionSaveProject", "mProjectFromTemplateMenu",
-            "mRecentProjectsMenu", "mProjectFromStorageMenu", "mActionSaveProjectAs", "mProjectToStorageMenu",
-            "mActionRevertProject", "mActionCloseProject", "mActionExit")),),
-         ("mActionNewProject", "mActionOpenProject", "mActionSaveProject"), LABELS),
-        ("Settings", (("@", ("mActionProjectProperties", "mActionSnappingOptions", "mActionStyleManager")),),
-         ("mActionProjectProperties",), LABELS),
-        ("Import and Export", (("@", (
-            "mActionSaveMapAsImage", "mActionSaveMapAsPdf", "mActionDxfExport", "mActionDwgImport")),), (), LABELS),
-        ("Layouts", (("@", ("mActionNewPrintLayout", "mActionNewReport", "mActionShowLayoutManager", "mLayoutsMenu")),),
-         ("mActionNewPrintLayout",), LABELS),
-        ("More", (("menu", ("mProjectMenu",)),), (), LABELS),
-    )),
-    ("Home", (
-        ("Project", (("mFileToolBar", None),),
-         ("mActionNewProject", "mActionOpenProject", "mActionSaveProject"), LABELS),
-        ("Navigate", (("mMapNavToolBar", (
-            "mActionPan", "mActionPanToSelected", "mActionZoomIn", "mActionZoomOut", "mActionZoomFullExtent",
-            "mActionZoomToSelected", "mActionZoomToLayers", "mActionZoomActualSize", "mActionZoomLast",
-            "mActionZoomNext", "mActionDraw")),), ("mActionPan",), ICONS),
-        ("Select", (SELECT_TOOLS, ("mSelectionToolBar", None), RESELECT), SELECT_LARGE, ICONS),
-        ("Inspect", (("mAttributesToolBar", None),), ("mActionIdentify", "ActionOpenTable"), LABELS),
-    )),
-    ("Data", (
-        ("Add Data", (("mDataSourceManagerToolBar", ("mActionDataSourceManager",)),),
-         ("mActionDataSourceManager",), LABELS),
-        ("Add Layer", (("mLayerToolBar", (
-            "mActionAddOgrLayer", "mActionAddRasterLayer", "mActionAddMeshLayer", "mActionAddDelimitedText",
-            "mActionAddSpatiaLiteLayer", "mActionAddVirtualLayer", "ActionAddDbLayer", "mActionAddWmsLayer",
-            "mActionAddWcsLayer", "mActionAddWfsLayer", "mActionAddStacLayer")),), (), LABELS),
-        ("Create Layer", (("mDataSourceManagerToolBar", None), ("mLayerToolBar", None)),
-         ("mActionNewGeoPackageLayer",), LABELS),
-        ("More Data", (("@", (
-            "mAddLayerMenu", "mNewLayerMenu", "mActionEmbedLayers", "mActionAddLayerDefinition")),), (), LABELS),
-    )),
-    ("Layer", (
-        ("Layer", (("@", (
-            "mActionLayerProperties", "mActionLayerSubsetString", "mActionDuplicateLayer", "mActionSetLayerCRS",
-            "mActionSetProjectCRSFromLayer", "mActionSetLayerScaleVisibility", "mActionLayerSaveAs",
-            "mActionSaveLayerDefinition", "mActionRemoveLayer")),), ("mActionLayerProperties",), LABELS),
-        ("Copy and Paste", (("@", (
-            "mActionCopyStyle", "mActionPasteStyle", "mActionCopyLayer", "mActionPasteLayer")),), (), LABELS),
-        ("Overview", (("@", ("mActionAddToOverview", "mActionAddAllToOverview", "mActionRemoveAllFromOverview")),),
-         (), LABELS),
-        ("More", (("menu", ("mLayerMenu",)),), (), LABELS),
-    )),
-    ("Edit", (
-        ("Editing", (("mDigitizeToolBar", ("mActionToggleEditing", "mActionSaveLayerEdits", "mActionAllEdits")),),
-         ("mActionToggleEditing",), LABELS),
-        ("Digitize", (("mDigitizeToolBar", ("mActionAddFeature", "ActionVertexTool", "mDigitizeModeToolButton")),),
-         ("mActionAddFeature", "ActionVertexTool"), LABELS),
-        SELECT_GROUP,
-        ("Features", (("mDigitizeToolBar", (
-            "mActionMultiEditAttributes", "mActionDeleteSelected", "mActionCutFeatures", "mActionCopyFeatures",
-            "mActionPasteFeatures")), ("@", ("mMenuPasteAs",))), (), LABELS),
-        ("History", (("mDigitizeToolBar", None),), (), LABELS),
-        ("Snapping", (("mSnappingToolBar", None),), (), ICONS, (
-            ("EnableSnappingAction", "mModeAction", "mEditAdvancedConfigAction", "mTypeAction", "mToleranceAction",
-             "mUnitAction"),
-            ("TopologicalEditingAction", "mAvoidIntersectionsModeAction", "IntersectionSnappingAction",
-             "EnableTracingAction", "SelfSnappingAction"),
-        )),
-        ("Shapes", (("mShapeDigitizeToolBar", None),), (), ICONS),
-        ("More", (("menu", ("mEditMenu",)),), (), LABELS),
-    )),
-    ("Modify", (
-        SELECT_GROUP,
-        ("Advanced", (("mAdvancedDigitizeToolBar", ("mEnableAction",)),), ("mEnableAction",), LABELS),
-        ("Transform", (("mAdvancedDigitizeToolBar", (
-            "ActionMoveFeatureTool", "mActionRotateFeature", "mActionScaleFeature", "mActionSimplifyFeature",
-            "mActionOffsetCurve", "mActionReverseLine")),), (), LABELS),
-        ("Rings and Parts", (("mAdvancedDigitizeToolBar", (
-            "mActionAddRing", "mActionAddPart", "mActionFillRing", "mActionDeleteRing", "mActionDeletePart")),),
-         (), LABELS),
-        ("Reshape", (("mAdvancedDigitizeToolBar", (
-            "mActionReshapeFeatures", "mActionChamferFillet", "mActionTrimExtendFeature", "mActionSplitFeatures",
-            "mActionSplitParts", "mActionMergeFeatures", "mActionMergeFeatureAttributes")),), (), LABELS),
-        ("Point Symbols", (("mAdvancedDigitizeToolBar", None),), (), LABELS),
-    )),
-    ("Annotate", (
-        ("Labels", (("mLabelToolBar", ("mActionLabeling", "mActionDiagramProperties")),),
-         ("mActionLabeling", "mActionDiagramProperties"), LABELS),
-        ("Label Tools", (("mLabelToolBar", None),), (), LABELS),
-        ("Annotations", (("mAnnotationsToolBar", (
-            "annotationLayerToolButtonAction", "mActionSelectAnnotation", "mActionModifyAnnotation")),),
-         ("annotationLayerToolButtonAction",), LABELS),
-        ("Draw", (("mAnnotationsToolBar", (
-            "mActionPolygonAnnotation", "mActionLineAnnotation", "mActionMarkerAnnotation",
-            "mActionTextAnnotationatPoint", "mActionTextAnnotationalongLine", "mActionTextAnnotationinRectangle",
-            "mActionPictureAnnotation")),), (), ICONS),
-        ("Map Annotations", (("mAnnotationsToolBar", None),), (), LABELS),
-    )),
-    ("View", (
-        ("Map Views", (("mMapNavToolBar", ("mActionNewMapCanvas", "mActionNew3DMapCanvas")),
-                       ("@", ("mActionNew3DMapCanvasGlobe", "mActionManage3DMapViews"))),
-         ("mActionNewMapCanvas", "mActionNew3DMapCanvas"), LABELS),
-        ("Bookmarks", (("mMapNavToolBar", ("mActionNewBookmark", "mActionShowBookmarks")),
-                       ("@", ("mActionShowBookmarkManager",))), (), LABELS),
-        ("Time", (("mMapNavToolBar", None),), ("mActionTemporalController",), LABELS),
-        ("Elevation", (("@", (
-            "mActionElevationProfile", "mActionManageElevationProfiles", "mActionElevationController")),),
-         ("mActionElevationProfile",), LABELS),
-        ("Map Display", (("@", ("mMenuDecorations", "mMenuPreviewMode", "mMenuLayerVisibility")),), (), LABELS),
-        ("Window", (("@", (
-            "mPanelMenu", "mActionToggleFullScreen", "mActionTogglePanelsVisibility", "mActionToggleMapOnly")),),
-         (), LABELS),
-        ("More", (("menu", ("mViewMenu",)),), (), LABELS),
-    )),
-    ("Vector", (
-        ("Vector Tools", (("menu", ("mVectorMenu",)),), (), LABELS),
-        ("Vector Plugins", (("mVectorToolBar", None),), (), AUTO),
-    )),
-    ("Raster", (
-        ("Tools", (("@", ("mActionShowRasterCalculator", "mActionShowGeoreferencer")),),
-         ("mActionShowRasterCalculator", "mActionShowGeoreferencer"), LABELS),
-        ("Raster Tools", (("menu", ("mRasterMenu",)),), (), LABELS),
-        ("Stretch", (("mRasterToolBar", (
-            "mActionLocalCumulativeCutStretch", "mActionFullCumulativeCutStretch", "mActionLocalHistogramStretch",
-            "mActionFullHistogramStretch")),), (), ICONS, (
-            ("mActionLocalCumulativeCutStretch", "mActionLocalHistogramStretch"),
-            ("mActionFullCumulativeCutStretch", "mActionFullHistogramStretch"),
-        )),
-        ("Adjust", (("mRasterToolBar", (
-            "mActionIncreaseBrightness", "mActionDecreaseBrightness", "mActionIncreaseContrast",
-            "mActionDecreaseContrast", "mActionIncreaseGamma", "mActionDecreaseGamma")),), (), ICONS, (
-            ("mActionIncreaseBrightness", "mActionIncreaseContrast", "mActionIncreaseGamma"),
-            ("mActionDecreaseBrightness", "mActionDecreaseContrast", "mActionDecreaseGamma"),
-        )),
-        ("Raster Plugins", (("mRasterToolBar", None),), (), ICONS),
-    )),
-    ("Mesh", (
-        ("Calculator", (("@", ("mActionShowMeshCalculator", "mActionReindexMesh")),),
-         ("mActionShowMeshCalculator",), LABELS),
-        ("Mesh Editing", (("mMeshToolBar", None),), (), LABELS),
-        ("More", (("menu", ("mMeshMenu",)),), (), LABELS),
-    )),
-    ("Processing", (
-        ("Toolbox", (("@", ("toolboxAction", "modelerAction", "mMenuProjectModels")),),
-         ("toolboxAction", "modelerAction"), LABELS),
-        ("Results", (("@", ("historyAction", "resultsViewer", "editInPlaceFeatures")),), (), LABELS),
-        ("More", (("menu", ("processing",)),), (), LABELS),
-    )),
-    ("GPS", (
-        ("Connection", (("mGpsToolBar", ("mConnectAction", "mRecenterAction")),), ("mConnectAction",), LABELS),
-        ("Tracking", (("mGpsToolBar", (
-            "mDestinationLayerButtonAction", "mAddTrackVertexAction", "mCreateFeatureAction",
-            "mResetFeatureAction")),), (), LABELS),
-        ("Display", (("mGpsToolBar", None),), (), LABELS),
-    )),
-    ("Plugins", (
-        ("Plugins", (("@", ("mActionManagePlugins",)),), ("mActionManagePlugins",), LABELS),
-        ("Python", (("mPluginToolBar", None),), (), AUTO),
-        ("Plugin Menus", (("menu", ("mPluginMenu",)),), (), LABELS),
-        ("Database", (("mDatabaseToolBar", None), ("menu", ("mDatabaseMenu",))), ("dbManager",), LABELS),
-        ("Web", (("mWebToolBar", None), ("menu", ("mWebMenu",))), ("action_run",), LABELS),
-    )),
-    ("Settings", (
-        ("Options", (("@", ("mActionOptions",)),), ("mActionOptions",), LABELS),
-        ("Customize", (("@", (
-            "mActionConfigureShortcuts", "mActionCustomization", "mActionStyleManager", "mActionCustomProjection")),),
-         (), LABELS),
-        ("Profiles", (("@", ("mUserProfileMenu",)),), (), LABELS),
-        ("More", (("menu", ("mSettingsMenu",)),), (), LABELS),
-    )),
-    ("Help", (
-        ("Help", (("@", ("mActionHelpContents", "mActionHelpAPI", "mActionHelpPyQgisAPI", "mMenuPluginHelp")),),
-         ("mActionHelpContents",), LABELS),
-        ("QGIS", (("@", ("mActionQgisHomePage", "mActionCheckQgisVersion", "mActionAbout")),), ("mActionAbout",),
-         LABELS),
-        ("Community", (("@", (
-            "mActionReportaBug", "mActionGetInvolved", "mActionNeedSupport", "mActionDonate", "mActionSponsors")),),
-         (), LABELS),
-        ("More", (("menu", ("mHelpMenu",)),), (), LABELS),
-    )),
-)
+TABS_FILE = os.path.join(os.path.dirname(__file__), "ribbon.yaml")
+LAYOUTS = (LABELS, ICONS, AUTO)
+
+
+def _source(source):
+    """A source of ribbon.yaml as a TABS source."""
+    if "toolbar" in source:
+        actions = source.get("actions")
+        return source["toolbar"], None if actions is None else tuple(actions)
+    if "main" in source:
+        return "@", tuple(source["main"])
+    if "menu" in source:
+        return "menu", tuple(source["menu"])
+    raise ValueError(f"ribbon.yaml: unknown source {source!r}")
+
+
+def _group(group):
+    """A group of ribbon.yaml as a TABS group."""
+    layout = group.get("layout", LABELS)
+    if layout not in LAYOUTS:
+        raise ValueError(f"ribbon.yaml: group {group.get('title')!r}: unknown layout {layout!r}")
+    item = (group["title"], tuple(_source(s) for s in group["sources"]), tuple(group.get("large") or ()), layout)
+    rows = group.get("rows")
+    return item + (tuple(tuple(row) for row in rows),) if rows else item
+
+
+def load_tabs(path=TABS_FILE):
+    """The tabs of ribbon.yaml at `path` as ((title, groups), ...)."""
+    with open(path, encoding="utf-8") as stream:
+        data = yaml.safe_load(stream)
+    return tuple((tab["title"], tuple(_group(g) for g in tab["groups"])) for tab in data["tabs"])
+
+
+TABS = load_tabs()
 # The tab shown when none was chosen yet.
 DEFAULT_TAB = "Home"
 # Milliseconds before the tab shown is saved, after the last click.

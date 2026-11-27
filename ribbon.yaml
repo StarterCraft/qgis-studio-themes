@@ -1,0 +1,527 @@
+# The ribbon's tabs, in order (read by studio_ribbon.py at startup).
+# Tab and group titles stay English; translations are in i18n/ by context "title".
+#
+# A group:
+#   title:   its name
+#   sources: where its buttons come from, in order; each one of
+#     - toolbar: <toolbar objectName>
+#       actions: [<action objectNames>]   # omit: the toolbar's actions no other group names
+#     - main: [<objectNames>]   # actions of the main window not on a toolbar, or menus
+#                               # (shown as a button opening the menu)
+#     - menu: [<menu objectNames>]   # what those menus hold that the ribbon has nowhere else
+#   large:   objectNames shown as large buttons (optional)
+#   layout:  labels | icons | auto   (auto: plugins' groups; large labelled buttons
+#            for up to 3 actions, else icons)
+#   rows:    explicit rows of small buttons, lists of objectNames (optional)
+
+tabs:
+  - title: "Project"
+    groups:
+      - title: "Project"
+        sources:
+          - main:
+              - "mActionNewProject"
+              - "mActionOpenProject"
+              - "mActionSaveProject"
+              - "mProjectFromTemplateMenu"
+              - "mRecentProjectsMenu"
+              - "mProjectFromStorageMenu"
+              - "mActionSaveProjectAs"
+              - "mProjectToStorageMenu"
+              - "mActionRevertProject"
+              - "mActionCloseProject"
+              - "mActionExit"
+        large: ["mActionNewProject", "mActionOpenProject", "mActionSaveProject"]
+        layout: labels
+      - title: "Settings"
+        sources:
+          - main: ["mActionProjectProperties", "mActionSnappingOptions", "mActionStyleManager"]
+        large: ["mActionProjectProperties"]
+        layout: labels
+      - title: "Import and Export"
+        sources:
+          - main:
+              - "mActionSaveMapAsImage"
+              - "mActionSaveMapAsPdf"
+              - "mActionDxfExport"
+              - "mActionDwgImport"
+        layout: labels
+      - title: "Layouts"
+        sources:
+          - main:
+              - "mActionNewPrintLayout"
+              - "mActionNewReport"
+              - "mActionShowLayoutManager"
+              - "mLayoutsMenu"
+        large: ["mActionNewPrintLayout"]
+        layout: labels
+      - title: "More"
+        sources:
+          - menu: ["mProjectMenu"]
+        layout: labels
+  - title: "Home"
+    groups:
+      - title: "Project"
+        sources:
+          - toolbar: "mFileToolBar"
+        large: ["mActionNewProject", "mActionOpenProject", "mActionSaveProject"]
+        layout: labels
+      - title: "Navigate"
+        sources:
+          - toolbar: "mMapNavToolBar"
+            actions:
+              - "mActionPan"
+              - "mActionPanToSelected"
+              - "mActionZoomIn"
+              - "mActionZoomOut"
+              - "mActionZoomFullExtent"
+              - "mActionZoomToSelected"
+              - "mActionZoomToLayers"
+              - "mActionZoomActualSize"
+              - "mActionZoomLast"
+              - "mActionZoomNext"
+              - "mActionDraw"
+        large: ["mActionPan"]
+        layout: icons
+      - title: "Select"
+        sources:
+          - toolbar: "mSelectionToolBar"
+            actions: ["ActionSelect", "ActionDeselection"]
+          - toolbar: "mSelectionToolBar"
+          - main: ["mActionReselect"]
+        large: ["ActionSelect", "ActionDeselection"]
+        layout: icons
+      - title: "Inspect"
+        sources:
+          - toolbar: "mAttributesToolBar"
+        large: ["mActionIdentify", "ActionOpenTable"]
+        layout: labels
+  - title: "Data"
+    groups:
+      - title: "Add Data"
+        sources:
+          - toolbar: "mDataSourceManagerToolBar"
+            actions: ["mActionDataSourceManager"]
+        large: ["mActionDataSourceManager"]
+        layout: labels
+      - title: "Add Layer"
+        sources:
+          - toolbar: "mLayerToolBar"
+            actions:
+              - "mActionAddOgrLayer"
+              - "mActionAddRasterLayer"
+              - "mActionAddMeshLayer"
+              - "mActionAddDelimitedText"
+              - "mActionAddSpatiaLiteLayer"
+              - "mActionAddVirtualLayer"
+              - "ActionAddDbLayer"
+              - "mActionAddWmsLayer"
+              - "mActionAddWcsLayer"
+              - "mActionAddWfsLayer"
+              - "mActionAddStacLayer"
+        layout: labels
+      - title: "Create Layer"
+        sources:
+          - toolbar: "mDataSourceManagerToolBar"
+          - toolbar: "mLayerToolBar"
+        large: ["mActionNewGeoPackageLayer"]
+        layout: labels
+      - title: "More Data"
+        sources:
+          - main: ["mAddLayerMenu", "mNewLayerMenu", "mActionEmbedLayers", "mActionAddLayerDefinition"]
+        layout: labels
+  - title: "Layer"
+    groups:
+      - title: "Layer"
+        sources:
+          - main:
+              - "mActionLayerProperties"
+              - "mActionLayerSubsetString"
+              - "mActionDuplicateLayer"
+              - "mActionSetLayerCRS"
+              - "mActionSetProjectCRSFromLayer"
+              - "mActionSetLayerScaleVisibility"
+              - "mActionLayerSaveAs"
+              - "mActionSaveLayerDefinition"
+              - "mActionRemoveLayer"
+        large: ["mActionLayerProperties"]
+        layout: labels
+      - title: "Copy and Paste"
+        sources:
+          - main: ["mActionCopyStyle", "mActionPasteStyle", "mActionCopyLayer", "mActionPasteLayer"]
+        layout: labels
+      - title: "Overview"
+        sources:
+          - main: ["mActionAddToOverview", "mActionAddAllToOverview", "mActionRemoveAllFromOverview"]
+        layout: labels
+      - title: "More"
+        sources:
+          - menu: ["mLayerMenu"]
+        layout: labels
+  - title: "Edit"
+    groups:
+      - title: "Editing"
+        sources:
+          - toolbar: "mDigitizeToolBar"
+            actions: ["mActionToggleEditing", "mActionSaveLayerEdits", "mActionAllEdits"]
+        large: ["mActionToggleEditing"]
+        layout: labels
+      - title: "Digitize"
+        sources:
+          - toolbar: "mDigitizeToolBar"
+            actions: ["mActionAddFeature", "ActionVertexTool", "mDigitizeModeToolButton"]
+        large: ["mActionAddFeature", "ActionVertexTool"]
+        layout: labels
+      - &select
+        title: "Select"
+        sources:
+          - toolbar: "mSelectionToolBar"
+            actions: ["ActionSelect", "ActionDeselection"]
+          - main: ["mActionReselect"]
+        large: ["ActionSelect", "ActionDeselection"]
+        layout: labels
+      - title: "Features"
+        sources:
+          - toolbar: "mDigitizeToolBar"
+            actions:
+              - "mActionMultiEditAttributes"
+              - "mActionDeleteSelected"
+              - "mActionCutFeatures"
+              - "mActionCopyFeatures"
+              - "mActionPasteFeatures"
+          - main: ["mMenuPasteAs"]
+        layout: labels
+      - title: "History"
+        sources:
+          - toolbar: "mDigitizeToolBar"
+        layout: labels
+      - title: "Snapping"
+        sources:
+          - toolbar: "mSnappingToolBar"
+        layout: icons
+        rows:
+          -
+              - "EnableSnappingAction"
+              - "mModeAction"
+              - "mEditAdvancedConfigAction"
+              - "mTypeAction"
+              - "mToleranceAction"
+              - "mUnitAction"
+          -
+              - "TopologicalEditingAction"
+              - "mAvoidIntersectionsModeAction"
+              - "IntersectionSnappingAction"
+              - "EnableTracingAction"
+              - "SelfSnappingAction"
+      - title: "Shapes"
+        sources:
+          - toolbar: "mShapeDigitizeToolBar"
+        layout: icons
+      - title: "More"
+        sources:
+          - menu: ["mEditMenu"]
+        layout: labels
+  - title: "Modify"
+    groups:
+      - *select
+      - title: "Advanced"
+        sources:
+          - toolbar: "mAdvancedDigitizeToolBar"
+            actions: ["mEnableAction"]
+        large: ["mEnableAction"]
+        layout: labels
+      - title: "Transform"
+        sources:
+          - toolbar: "mAdvancedDigitizeToolBar"
+            actions:
+              - "ActionMoveFeatureTool"
+              - "mActionRotateFeature"
+              - "mActionScaleFeature"
+              - "mActionSimplifyFeature"
+              - "mActionOffsetCurve"
+              - "mActionReverseLine"
+        layout: labels
+      - title: "Rings and Parts"
+        sources:
+          - toolbar: "mAdvancedDigitizeToolBar"
+            actions:
+              - "mActionAddRing"
+              - "mActionAddPart"
+              - "mActionFillRing"
+              - "mActionDeleteRing"
+              - "mActionDeletePart"
+        layout: labels
+      - title: "Reshape"
+        sources:
+          - toolbar: "mAdvancedDigitizeToolBar"
+            actions:
+              - "mActionReshapeFeatures"
+              - "mActionChamferFillet"
+              - "mActionTrimExtendFeature"
+              - "mActionSplitFeatures"
+              - "mActionSplitParts"
+              - "mActionMergeFeatures"
+              - "mActionMergeFeatureAttributes"
+        layout: labels
+      - title: "Point Symbols"
+        sources:
+          - toolbar: "mAdvancedDigitizeToolBar"
+        layout: labels
+  - title: "Annotate"
+    groups:
+      - title: "Labels"
+        sources:
+          - toolbar: "mLabelToolBar"
+            actions: ["mActionLabeling", "mActionDiagramProperties"]
+        large: ["mActionLabeling", "mActionDiagramProperties"]
+        layout: labels
+      - title: "Label Tools"
+        sources:
+          - toolbar: "mLabelToolBar"
+        layout: labels
+      - title: "Annotations"
+        sources:
+          - toolbar: "mAnnotationsToolBar"
+            actions:
+              - "annotationLayerToolButtonAction"
+              - "mActionSelectAnnotation"
+              - "mActionModifyAnnotation"
+        large: ["annotationLayerToolButtonAction"]
+        layout: labels
+      - title: "Draw"
+        sources:
+          - toolbar: "mAnnotationsToolBar"
+            actions:
+              - "mActionPolygonAnnotation"
+              - "mActionLineAnnotation"
+              - "mActionMarkerAnnotation"
+              - "mActionTextAnnotationatPoint"
+              - "mActionTextAnnotationalongLine"
+              - "mActionTextAnnotationinRectangle"
+              - "mActionPictureAnnotation"
+        layout: icons
+      - title: "Map Annotations"
+        sources:
+          - toolbar: "mAnnotationsToolBar"
+        layout: labels
+  - title: "View"
+    groups:
+      - title: "Map Views"
+        sources:
+          - toolbar: "mMapNavToolBar"
+            actions: ["mActionNewMapCanvas", "mActionNew3DMapCanvas"]
+          - main: ["mActionNew3DMapCanvasGlobe", "mActionManage3DMapViews"]
+        large: ["mActionNewMapCanvas", "mActionNew3DMapCanvas"]
+        layout: labels
+      - title: "Bookmarks"
+        sources:
+          - toolbar: "mMapNavToolBar"
+            actions: ["mActionNewBookmark", "mActionShowBookmarks"]
+          - main: ["mActionShowBookmarkManager"]
+        layout: labels
+      - title: "Time"
+        sources:
+          - toolbar: "mMapNavToolBar"
+        large: ["mActionTemporalController"]
+        layout: labels
+      - title: "Elevation"
+        sources:
+          - main:
+              - "mActionElevationProfile"
+              - "mActionManageElevationProfiles"
+              - "mActionElevationController"
+        large: ["mActionElevationProfile"]
+        layout: labels
+      - title: "Map Display"
+        sources:
+          - main: ["mMenuDecorations", "mMenuPreviewMode", "mMenuLayerVisibility"]
+        layout: labels
+      - title: "Window"
+        sources:
+          - main:
+              - "mPanelMenu"
+              - "mActionToggleFullScreen"
+              - "mActionTogglePanelsVisibility"
+              - "mActionToggleMapOnly"
+        layout: labels
+      - title: "More"
+        sources:
+          - menu: ["mViewMenu"]
+        layout: labels
+  - title: "Vector"
+    groups:
+      - title: "Vector Tools"
+        sources:
+          - menu: ["mVectorMenu"]
+        layout: labels
+      - title: "Vector Plugins"
+        sources:
+          - toolbar: "mVectorToolBar"
+        layout: auto
+  - title: "Raster"
+    groups:
+      - title: "Tools"
+        sources:
+          - main: ["mActionShowRasterCalculator", "mActionShowGeoreferencer"]
+        large: ["mActionShowRasterCalculator", "mActionShowGeoreferencer"]
+        layout: labels
+      - title: "Raster Tools"
+        sources:
+          - menu: ["mRasterMenu"]
+        layout: labels
+      - title: "Stretch"
+        sources:
+          - toolbar: "mRasterToolBar"
+            actions:
+              - "mActionLocalCumulativeCutStretch"
+              - "mActionFullCumulativeCutStretch"
+              - "mActionLocalHistogramStretch"
+              - "mActionFullHistogramStretch"
+        layout: icons
+        rows:
+          - ["mActionLocalCumulativeCutStretch", "mActionLocalHistogramStretch"]
+          - ["mActionFullCumulativeCutStretch", "mActionFullHistogramStretch"]
+      - title: "Adjust"
+        sources:
+          - toolbar: "mRasterToolBar"
+            actions:
+              - "mActionIncreaseBrightness"
+              - "mActionDecreaseBrightness"
+              - "mActionIncreaseContrast"
+              - "mActionDecreaseContrast"
+              - "mActionIncreaseGamma"
+              - "mActionDecreaseGamma"
+        layout: icons
+        rows:
+          - ["mActionIncreaseBrightness", "mActionIncreaseContrast", "mActionIncreaseGamma"]
+          - ["mActionDecreaseBrightness", "mActionDecreaseContrast", "mActionDecreaseGamma"]
+      - title: "Raster Plugins"
+        sources:
+          - toolbar: "mRasterToolBar"
+        layout: icons
+  - title: "Mesh"
+    groups:
+      - title: "Calculator"
+        sources:
+          - main: ["mActionShowMeshCalculator", "mActionReindexMesh"]
+        large: ["mActionShowMeshCalculator"]
+        layout: labels
+      - title: "Mesh Editing"
+        sources:
+          - toolbar: "mMeshToolBar"
+        layout: labels
+      - title: "More"
+        sources:
+          - menu: ["mMeshMenu"]
+        layout: labels
+  - title: "Processing"
+    groups:
+      - title: "Toolbox"
+        sources:
+          - main: ["toolboxAction", "modelerAction", "mMenuProjectModels"]
+        large: ["toolboxAction", "modelerAction"]
+        layout: labels
+      - title: "Results"
+        sources:
+          - main: ["historyAction", "resultsViewer", "editInPlaceFeatures"]
+        layout: labels
+      - title: "More"
+        sources:
+          - menu: ["processing"]
+        layout: labels
+  - title: "GPS"
+    groups:
+      - title: "Connection"
+        sources:
+          - toolbar: "mGpsToolBar"
+            actions: ["mConnectAction", "mRecenterAction"]
+        large: ["mConnectAction"]
+        layout: labels
+      - title: "Tracking"
+        sources:
+          - toolbar: "mGpsToolBar"
+            actions:
+              - "mDestinationLayerButtonAction"
+              - "mAddTrackVertexAction"
+              - "mCreateFeatureAction"
+              - "mResetFeatureAction"
+        layout: labels
+      - title: "Display"
+        sources:
+          - toolbar: "mGpsToolBar"
+        layout: labels
+  - title: "Plugins"
+    groups:
+      - title: "Plugins"
+        sources:
+          - main: ["mActionManagePlugins"]
+        large: ["mActionManagePlugins"]
+        layout: labels
+      - title: "Python"
+        sources:
+          - toolbar: "mPluginToolBar"
+        layout: auto
+      - title: "Plugin Menus"
+        sources:
+          - menu: ["mPluginMenu"]
+        layout: labels
+      - title: "Database"
+        sources:
+          - toolbar: "mDatabaseToolBar"
+          - menu: ["mDatabaseMenu"]
+        large: ["dbManager"]
+        layout: labels
+      - title: "Web"
+        sources:
+          - toolbar: "mWebToolBar"
+          - menu: ["mWebMenu"]
+        large: ["action_run"]
+        layout: labels
+  - title: "Settings"
+    groups:
+      - title: "Options"
+        sources:
+          - main: ["mActionOptions"]
+        large: ["mActionOptions"]
+        layout: labels
+      - title: "Customize"
+        sources:
+          - main:
+              - "mActionConfigureShortcuts"
+              - "mActionCustomization"
+              - "mActionStyleManager"
+              - "mActionCustomProjection"
+        layout: labels
+      - title: "Profiles"
+        sources:
+          - main: ["mUserProfileMenu"]
+        layout: labels
+      - title: "More"
+        sources:
+          - menu: ["mSettingsMenu"]
+        layout: labels
+  - title: "Help"
+    groups:
+      - title: "Help"
+        sources:
+          - main: ["mActionHelpContents", "mActionHelpAPI", "mActionHelpPyQgisAPI", "mMenuPluginHelp"]
+        large: ["mActionHelpContents"]
+        layout: labels
+      - title: "QGIS"
+        sources:
+          - main: ["mActionQgisHomePage", "mActionCheckQgisVersion", "mActionAbout"]
+        large: ["mActionAbout"]
+        layout: labels
+      - title: "Community"
+        sources:
+          - main:
+              - "mActionReportaBug"
+              - "mActionGetInvolved"
+              - "mActionNeedSupport"
+              - "mActionDonate"
+              - "mActionSponsors"
+        layout: labels
+      - title: "More"
+        sources:
+          - menu: ["mHelpMenu"]
+        layout: labels
