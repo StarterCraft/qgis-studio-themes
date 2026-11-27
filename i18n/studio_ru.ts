@@ -1049,10 +1049,6 @@
         <translation>Закрыть</translation>
     </message>
     <message>
-        <source>Drag to reorder or move. Double-click a tab or group to rename it. Tick Large for a large button.</source>
-        <translation>Перетаскивайте, чтобы менять порядок и переносить. Двойной щелчок по вкладке или группе — переименовать. Отметка «Крупная» — крупная кнопка.</translation>
-    </message>
-    <message>
         <source>Search commands…</source>
         <translation>Поиск команд…</translation>
     </message>
@@ -1319,6 +1315,78 @@
     <message>
         <source>Auto (large for up to 3 buttons, else icons)</source>
         <translation>Авто (крупные, если кнопок не больше 3, иначе значки)</translation>
+    </message>
+    <message>
+        <source>Drag to reorder or move. Double-click a tab or group to rename it. Tick Large for a large button. Drop commands on a dropdown to fill its list.</source>
+        <translation>Перетаскивайте, чтобы менять порядок и переносить. Двойной щелчок по вкладке или группе — переименовать. Отметка «Крупная» — крупная кнопка. Перетащите команды на выпадающий список, чтобы наполнить его.</translation>
+    </message>
+    <message>
+        <source>(none: the button only opens its list)</source>
+        <translation>(нет: кнопка только открывает список)</translation>
+    </message>
+    <message>
+        <source>Button command</source>
+        <translation>Команда кнопки</translation>
+    </message>
+    <message>
+        <source>Drop commands or menus on the dropdown to fill its list.</source>
+        <translation>Перетащите команды или меню на выпадающий список, чтобы наполнить его.</translation>
+    </message>
+    <message>
+        <source>Add Dropdown</source>
+        <translation>Добавить список</translation>
+    </message>
+    <message>
+        <source>A button with a list of its own. On a chosen button: that button, with a list behind its arrow</source>
+        <translation>Кнопка со своим выпадающим списком. Если выбрана кнопка — она сама, со списком за стрелкой</translation>
+    </message>
+    <message>
+        <source>Add Line</source>
+        <translation>Добавить линию</translation>
+    </message>
+    <message>
+        <source>A line between the items of a dropdown's list</source>
+        <translation>Линия между пунктами выпадающего списка</translation>
+    </message>
+    <message>
+        <source>A dropdown: its command on its face, its list behind the arrow</source>
+        <translation>Выпадающий список: на кнопке своя команда, список — за стрелкой</translation>
+    </message>
+    <message>
+        <source>A dropdown: a button opening its list</source>
+        <translation>Выпадающий список: кнопка, открывающая список</translation>
+    </message>
+    <message>
+        <source>Choose a dropdown or one of its items first.</source>
+        <translation>Сначала выберите выпадающий список или его пункт.</translation>
+    </message>
+    <message>
+        <source>Its list: drop commands or menus (submenus) on it, Add Line for a line. With a command, the button runs it and its arrow opens the list; without one, the button opens the list.</source>
+        <translation>Его список: перетащите на него команды или меню (станут подменю), «Добавить линию» — линия. С командой кнопка выполняет её, а стрелка открывает список; без команды кнопка открывает список.</translation>
+    </message>
+    <message>
+        <source>dropdown</source>
+        <translation>выпадающий список</translation>
+    </message>
+    <message>
+        <source>(the command's own label)</source>
+        <translation>(подпись самой команды)</translation>
+    </message>
+    <message>
+        <source>An item of the dropdown's list. Drag it onto a group to make it a button again.</source>
+        <translation>Пункт выпадающего списка. Перетащите его на группу, чтобы он снова стал кнопкой.</translation>
+    </message>
+    <message>
+        <source>line</source>
+        <translation>линия</translation>
+    </message>
+    <message>
+        <source>submenu</source>
+        <translation>подменю</translation>
+    </message>
+    <message>
+        <source>command</source>
+        <translation>команда</translation>
     </message>
 </context>
 </TS>

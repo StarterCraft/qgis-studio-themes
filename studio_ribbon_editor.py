@@ -9,14 +9,17 @@ Two views of the same file:
   QGIS has, by toolbar and by menu. Commands are dragged onto groups,
   dragged within the tree to reorder or move them, and dragged back (or
   deleted) to take them off. A tick in the Large column makes a button
-  large. Commands already on the ribbon are greyed in the list.
+  large. Commands already on the ribbon are greyed in the list. A dropdown
+  is a button with a list of its own: commands dropped on it go into its
+  list (menus show as submenus), and its own command, if it has one, is on
+  its face.
 - YAML: the file as text (format in ribbon.yaml's header), checked before it
   is used.
 
 The tree's entries map onto ribbon.yaml's sources: a command of a toolbar
 ("toolbar:" with "actions:"), a command of the main window ("main:"), a
-toolbar's other buttons ("toolbar:" without "actions:") and a menu's other
-commands ("menu:"). Consecutive entries of one kind are written as one
+toolbar's other buttons ("toolbar:" without "actions:"), a menu's other
+commands ("menu:") and a dropdown ("dropdown:"). Consecutive entries of one kind are written as one
 source. Saving from the YAML view keeps the text as typed (comments too);
 the visual view writes the file in ribbon.yaml's own layout.
 """
@@ -26,7 +29,7 @@ import os
 import yaml
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import QItemSelectionModel, QMimeData, QRegularExpression, Qt, pyqtSignal
-from qgis.PyQt.QtGui import QBrush, QColor, QFont, QFontDatabase, QPalette, QSyntaxHighlighter, QTextCharFormat, QTextCursor
+from qgis.PyQt.QtGui import QBrush, QColor, QFont, QFontDatabase, QIcon, QPalette, QSyntaxHighlighter, QTextCharFormat, QTextCursor
 from qgis.PyQt.QtWidgets import (
     QAbstractItemView, QAction, QCheckBox, QComboBox, QDialog, QFormLayout, QGroupBox, QHBoxLayout, QHeaderView, QLabel,
     QLineEdit, QListWidget, QListWidgetItem, QMenu, QMessageBox, QPlainTextEdit, QPushButton, QSplitter, QTabWidget, QToolBar,
@@ -39,11 +42,24 @@ from .studio_i18n import tr
 
 MIME = "application/x-studio-ribbon-entries"
 ROLE = Qt.ItemDataRole.UserRole
-# Tree levels: a tab, a group, an entry (a button or a source of buttons).
-TAB, GROUP, ENTRY = 0, 1, 2
+# Tree levels: a tab, a group, an entry (a button or a source of buttons),
+# an item of a dropdown's list.
+TAB, GROUP, ENTRY, ITEM = 0, 1, 2, 3
 # Entry kinds: a command (an action or a menu shown as a button), a
-# toolbar's other buttons, a menu's other commands.
-CMD, REST, MENU = "cmd", "rest", "menu"
+# toolbar's other buttons, a menu's other commands, a dropdown; and the
+# items of a dropdown's list (a name, or SEPARATOR).
+CMD, REST, MENU, DROP, LISTED = "cmd", "rest", "menu", "dropdown", "item"
+SEPARATOR = studio_ribbon.SEPARATOR
+
+
+def entry_key(entry):
+    """The name `large` and `rows` know an entry by: a command's name, a
+    dropdown's command or else its title; None for the others."""
+    if entry["kind"] == CMD:
+        return entry["name"]
+    if entry["kind"] == DROP:
+        return entry.get("action") or entry.get("title")
+    return None
 # Lists of names written on one line up to this width.
 LINE_WIDTH = 100
 
@@ -60,8 +76,9 @@ def _t(text):
 def tabs_from_data(data):
     """ribbon.yaml's parsed `data` as [{"title", "groups": [{"title",
     "layout", "large", "rows", "entries": [entry]}]}]; an entry is {"kind":
-    CMD, "name", "toolbar" (or None)}, {"kind": REST, "toolbar"} or
-    {"kind": MENU, "name"}."""
+    CMD, "name", "toolbar" (or None)}, {"kind": REST, "toolbar"},
+    {"kind": MENU, "name"} or {"kind": DROP, "action", "title" (either may
+    be None), "items": [names]}."""
     tabs = []
     for tab in data["tabs"]:
         groups = []
@@ -77,6 +94,10 @@ def tabs_from_data(data):
                     entries += [{"kind": CMD, "name": n, "toolbar": None} for n in source["main"]]
                 elif "menu" in source:
                     entries += [{"kind": MENU, "name": n} for n in source["menu"]]
+                elif "dropdown" in source:
+                    spec = source["dropdown"]
+                    entries.append({"kind": DROP, "action": spec.get("action"), "title": spec.get("title"),
+                                    "items": list(spec.get("items") or ())})
             groups.append({
                 "title": group["title"], "layout": group.get("layout", studio_ribbon.LABELS),
                 "large": list(group.get("large") or ()), "rows": [list(r) for r in group.get("rows") or ()],
@@ -97,6 +118,10 @@ def data_from_tabs(tabs):
                 last = sources[-1] if sources else None
                 if entry["kind"] == REST:
                     sources.append({"toolbar": entry["toolbar"]})
+                elif entry["kind"] == DROP:
+                    spec = {k: entry[k] for k in ("action", "title") if entry.get(k)}
+                    spec["items"] = list(entry.get("items") or ())
+                    sources.append({"dropdown": spec})
                 elif entry["kind"] == MENU:
                     if last is not None and "menu" in last:
                         last["menu"].append(entry["name"])
@@ -176,6 +201,13 @@ def dump(data, head=None):
                     lines.append(f"          - toolbar: {_quoted(source['toolbar'])}")
                     if "actions" in source:
                         _names(lines, "            ", "actions", source["actions"])
+                elif "dropdown" in source:
+                    spec = source["dropdown"]
+                    lines.append("          - dropdown:")
+                    for key in ("action", "title"):
+                        if spec.get(key):
+                            lines.append(f"              {key}: {_quoted(spec[key])}")
+                    _names(lines, "              ", "items", spec.get("items") or [])
                 else:
                     key = "main" if "main" in source else "menu"
                     _names(lines, "          ", f"- {key}", source[key])
@@ -510,6 +542,48 @@ class _RibbonTree(QTreeWidget):
             return (ENTRY, entries) if entries else (None, None)
         return None, None
 
+    def _dropdown_spot(self, event):
+        """(dropdown item, index) when the event points into a dropdown's
+        list (on the dropdown, or at one of its items), else None."""
+        item = self.itemAt(event.position().toPoint())
+        if item is None:
+            return None
+        Indicator = QAbstractItemView.DropIndicatorPosition
+        where = self.dropIndicatorPosition()
+        if _depth(item) == ITEM:
+            parent = item.parent()
+            return parent, parent.indexOfChild(item) + (0 if where == Indicator.AboveItem else 1)
+        if _depth(item) == ENTRY and item.data(0, ROLE)["kind"] == DROP:
+            if where == Indicator.OnItem:
+                return item, item.childCount()
+            if where == Indicator.BelowItem and item.isExpanded() and item.childCount():
+                return item, 0
+        return None
+
+    def _plan(self, event):
+        """(how, payload, parent, index) of a drop, or None. How: "move"
+        (items keep their level), "add" (palette entries), "into" (commands
+        into a dropdown's list), "out" (a dropdown's items onto a group)."""
+        level, payload = self._payload(event)
+        if level is None or not payload:
+            return None
+        inside = event.source() is self
+        if level in (ENTRY, ITEM):
+            spot = self._dropdown_spot(event)
+            if spot is not None:
+                if level == ITEM:
+                    return ("move", payload) + spot if inside else None
+                kinds = {(p.data(0, ROLE) if inside else p)["kind"] for p in payload}
+                if kinds == {CMD}:
+                    return ("into", payload) + spot
+            if level == ITEM:
+                target = self._target(ENTRY, event)
+                return ("out", payload) + target if target is not None and inside else None
+        target = self._target(level, event)
+        if target is None:
+            return None
+        return ("move" if inside else "add", payload) + target
+
     def dragEnterEvent(self, event):  # pylint: disable=invalid-name
         level, payload = self._payload(event)
         if level is None or not payload:
@@ -519,28 +593,47 @@ class _RibbonTree(QTreeWidget):
         event.accept()
 
     def dragMoveEvent(self, event):  # pylint: disable=invalid-name
-        level, payload = self._payload(event)
         super().dragMoveEvent(event)
-        if level is None or not payload or self._target(level, event) is None:
+        if self._plan(event) is None:
             event.ignore()
             return
         event.setDropAction(Qt.DropAction.CopyAction)
         event.accept()
 
     def dropEvent(self, event):  # pylint: disable=invalid-name
-        level, payload = self._payload(event)
-        target = self._target(level, event) if level is not None and payload else None
+        plan = self._plan(event)
         # Never MoveAction: Qt would then remove the dragged rows itself.
         event.setDropAction(Qt.DropAction.CopyAction)
-        if target is None:
+        if plan is None:
             event.ignore()
             return
         event.accept()
-        parent, index = target
-        if event.source() is self:
+        how, payload, parent, index = plan
+        if how == "move":
             self.move_items(payload, parent, index)
-        else:
+        elif how == "add":
             self.add_entries(payload, parent, index)
+        elif how == "into":
+            entries = [p.data(0, ROLE) if isinstance(p, QTreeWidgetItem) else p for p in payload]
+            if isinstance(payload[0], QTreeWidgetItem):
+                self._take(payload)
+            self.add_entries([{"kind": LISTED, "name": e["name"]} for e in entries], parent, index)
+        else:
+            names = [p.data(0, ROLE)["name"] for p in payload]
+            self._take(payload)
+            self.add_entries([{"kind": CMD, "name": n, "toolbar": self.toolbar_of(n)}
+                              for n in names if n != SEPARATOR], parent, index)
+
+    def _take(self, items):
+        root = self.invisibleRootItem()
+        for item in items:
+            (item.parent() or root).removeChild(item)
+
+    @staticmethod
+    def toolbar_of(_name):
+        """The toolbar a command dragged out of a dropdown comes from (set
+        by the dialog); None: the main window's."""
+        return None
 
     # ---- Changes ----------------------------------------------------------
 
@@ -575,6 +668,9 @@ class _RibbonTree(QTreeWidget):
 
     @staticmethod
     def _identity(entry):
+        """What makes two entries the same: dropdowns and lines never are."""
+        if entry["kind"] == DROP or entry.get("name") == SEPARATOR:
+            return object()
         return entry["kind"], entry.get("toolbar") if entry["kind"] == REST else entry.get("name")
 
     def add_entries(self, entries, group, index=None):
@@ -603,9 +699,7 @@ class _RibbonTree(QTreeWidget):
 
     def remove_selected(self):
         _level, items = self._dragged()
-        root = self.invisibleRootItem()
-        for item in items:
-            (item.parent() or root).removeChild(item)
+        self._take(items)
         if items:
             self.changed.emit()
 
@@ -673,6 +767,7 @@ class RibbonEditorDialog(QDialog):
 
     def _visual_view(self):
         self._tree = _RibbonTree(self._make_entry)
+        self._tree.toolbar_of = self._catalog.toolbar_of.get
         self._tree.changed.connect(self._tree_changed)
         self._tree.itemChanged.connect(self._item_changed)
         self._tree.currentItemChanged.connect(self._show_properties)
@@ -681,30 +776,37 @@ class RibbonEditorDialog(QDialog):
         self._palette.itemDoubleClicked.connect(lambda *_args: self._add_chosen())
 
         tools = QHBoxLayout()
-        for text, tip, slot in (
-                (_t("Add Tab"), _t("A new tab after the current one"), self._add_tab),
-                (_t("Add Group"), _t("A new group in the current tab"), self._add_group),
-                (_t("Remove"), _t("Take the selected items off the ribbon (Delete)"), self._tree.remove_selected),
-                ("▲", _t("Move up"), lambda: self._shift(-1)),
-                ("▼", _t("Move down"), lambda: self._shift(1)),
-                (_t("Expand All"), "", self._tree.expandAll),
-                (_t("Collapse All"), "", self._tree.collapseAll)):
+        moves = QHBoxLayout()
+        for row, text, tip, slot in (
+                (tools, _t("Add Tab"), _t("A new tab after the current one"), self._add_tab),
+                (tools, _t("Add Group"), _t("A new group in the current tab"), self._add_group),
+                (tools, _t("Add Dropdown"), _t("A button with a list of its own. On a chosen button: "
+                                              "that button, with a list behind its arrow"), self._add_dropdown),
+                (tools, _t("Add Line"), _t("A line between the items of a dropdown's list"), self._add_line),
+                (tools, _t("Remove"), _t("Take the selected items off the ribbon (Delete)"),
+                 self._tree.remove_selected),
+                (moves, "▲", _t("Move up"), lambda: self._shift(-1)),
+                (moves, "▼", _t("Move down"), lambda: self._shift(1)),
+                (moves, _t("Expand All"), "", self._tree.expandAll),
+                (moves, _t("Collapse All"), "", self._tree.collapseAll)):
             button = QPushButton(text)
             button.setToolTip(tip)
             button.clicked.connect(slot)
-            tools.addWidget(button)
+            row.addWidget(button)
         tools.addStretch(1)
+        moves.addStretch(1)
 
         left = QWidget()
         left_layout = QVBoxLayout(left)
         left_layout.setContentsMargins(0, 0, 0, 0)
         title = QLabel(f"<b>{_t('Ribbon')}</b>")
         hint = QLabel(_t("Drag to reorder or move. Double-click a tab or group to rename it. "
-                         "Tick Large for a large button."))
+                         "Tick Large for a large button. Drop commands on a dropdown to fill its list."))
         hint.setWordWrap(True)
         left_layout.addWidget(title)
         left_layout.addWidget(hint)
         left_layout.addLayout(tools)
+        left_layout.addLayout(moves)
         left_layout.addWidget(self._tree, 1)
         left_layout.addWidget(self._properties_box())
 
@@ -756,10 +858,21 @@ class RibbonEditorDialog(QDialog):
         self._large = QListWidget()
         self._large.setMaximumHeight(120)
         self._large.itemChanged.connect(self._large_list_changed)
+        self._command = QComboBox()
+        self._command.setEditable(True)
+        self._command.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        self._command.addItem(_t("(none: the button only opens its list)"), "")
+        for name in sorted(self._catalog.actions, key=lambda n: self._catalog.label(n)[0].lower()):
+            self._command.addItem(f"{self._catalog.label(name)[0]}  ({name})", name)
+        self._command.completer().setFilterMode(Qt.MatchFlag.MatchContains)
+        self._command.completer().setCompletionMode(self._command.completer().CompletionMode.PopupCompletion)
+        self._command.activated.connect(self._command_changed)
+        self._command.lineEdit().editingFinished.connect(self._command_changed)
         self._info = QLabel()
         self._info.setWordWrap(True)
         self._info.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         form.addRow(_t("Title"), self._title)
+        form.addRow(_t("Button command"), self._command)
         form.addRow(_t("Shown as"), self._shown_as)
         form.addRow(_t("Buttons"), self._layout)
         form.addRow(_t("Large buttons"), self._large)
@@ -863,10 +976,14 @@ class RibbonEditorDialog(QDialog):
                     entry = item.data(0, ROLE)
                     if entry["kind"] == CMD:
                         placed.setdefault(entry["name"], []).append(where)
+                    elif entry["kind"] == DROP:
+                        for name in [entry.get("action")] + [c.data(0, ROLE)["name"] for c in _children(item)]:
+                            if name and name != SEPARATOR:
+                                placed.setdefault(name, []).append(where)
                     elif entry["kind"] == REST:
                         placed.setdefault("rest:" + entry["toolbar"], []).append(where)
                         for name in self._toolbar_names(entry["toolbar"]):
-                            if name not in explicit.get(entry["toolbar"], ()):
+                            if name not in explicit.get(entry["toolbar"], set()) | explicit[None]:
                                 through.setdefault(name, where)
                     else:
                         placed.setdefault("menu:" + entry["name"], []).append(where)
@@ -887,15 +1004,22 @@ class RibbonEditorDialog(QDialog):
         return []
 
     def _explicit_toolbar_names(self):
-        """{toolbar: names the tree places from it by name} (those its
-        "other buttons" leave out, as studio_ribbon's _named)."""
-        named = {}
+        """{toolbar: names the tree places from it by name}, and under None
+        the names dropdowns hold: those a toolbar's "other buttons" leave
+        out, as studio_ribbon's _named and _dropdown_names."""
+        named = {None: set()}
         iterator = QTreeWidgetItemIterator(self._tree)
         while iterator.value() is not None:
             entry = iterator.value().data(0, ROLE)
-            if entry and entry.get("kind") == CMD and entry.get("toolbar"):
-                named.setdefault(entry["toolbar"], set()).add(entry["name"])
             iterator += 1
+            if not entry:
+                continue
+            if entry.get("kind") == CMD and entry.get("toolbar"):
+                named.setdefault(entry["toolbar"], set()).add(entry["name"])
+            elif entry.get("kind") == DROP and entry.get("action"):
+                named[None].add(entry["action"])
+            elif entry.get("kind") == LISTED:
+                named[None].add(entry["name"])
         return named
 
     def _refresh_palette(self):
@@ -946,18 +1070,25 @@ class RibbonEditorDialog(QDialog):
             item.setHidden(False)
 
     def _add_chosen(self):
+        entries = [i.data(0, ROLE) for i in self._palette.selectedItems() if i.data(0, ROLE)]
+        dropdown = self._current_dropdown()
+        if dropdown is not None:
+            self._tree.add_entries([{"kind": LISTED, "name": e["name"]} for e in entries if e["kind"] == CMD],
+                                   dropdown)
+            return
         group = self._current_group()
         if group is None:
             self._say(_t("Choose a group on the left first."), error=True)
             return
-        entries = [i.data(0, ROLE) for i in self._palette.selectedItems() if i.data(0, ROLE)]
         self._tree.add_entries(entries, group)
 
     # ---- The tree -----------------------------------------------------------
 
     def _make_entry(self, entry, group=None):
-        """A tree item for `entry` (see tabs_from_data)."""
+        """A tree item for `entry` (see tabs_from_data); a dropdown's list
+        becomes its children."""
         catalog = self._catalog
+        item_names = list(entry.get("items") or ()) if entry["kind"] == DROP else []
         item = QTreeWidgetItem()
         item.setData(0, ROLE, entry)
         flags = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsDragEnabled
@@ -982,6 +1113,36 @@ class RibbonEditorDialog(QDialog):
             large = group is not None and name in (group.data(0, ROLE) or {}).get("large", ())
             item.setCheckState(2, Qt.CheckState.Checked if large else Qt.CheckState.Unchecked)
             found = catalog.found(name)
+        elif entry["kind"] == DROP:
+            entry = {k: entry.get(k) for k in ("kind", "action", "title")}
+            item.setData(0, ROLE, entry)
+            flags |= Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsDropEnabled
+            item.setFlags(flags)
+            self._show_dropdown(item)
+            key = entry_key(entry)
+            large = group is not None and key in (group.data(0, ROLE) or {}).get("large", ())
+            item.setCheckState(2, Qt.CheckState.Checked if large else Qt.CheckState.Unchecked)
+            for name in item_names:
+                item.addChild(self._make_entry({"kind": LISTED, "name": name}, item))
+            item.setExpanded(True)
+            found = not entry.get("action") or catalog.found(entry["action"])
+        elif entry["kind"] == LISTED:
+            name = entry["name"]
+            item.setFlags(flags)
+            if name == SEPARATOR:
+                item.setText(0, "―――――")
+                item.setText(1, _t("line"))
+                found = True
+            else:
+                label, own = catalog.label(name)
+                item.setText(0, label)
+                kind = _t("submenu") if name in catalog.menu_titles else _t("command")
+                item.setText(1, f"{name} · {kind}")
+                item.setToolTip(0, own or name)
+                icon = catalog.icon(name)
+                if icon is not None and not icon.isNull():
+                    item.setIcon(0, icon)
+                found = catalog.found(name)
         elif entry["kind"] == REST:
             toolbar = entry["toolbar"]
             title = catalog.toolbar_titles.get(toolbar, toolbar)
@@ -999,7 +1160,7 @@ class RibbonEditorDialog(QDialog):
             item.setFlags(flags)
             found = name in catalog.menu_titles or catalog.found(name)
         font = item.font(0)
-        if entry["kind"] != CMD:
+        if entry["kind"] in (REST, MENU):
             font.setItalic(True)
         if not found:
             font.setItalic(True)
@@ -1007,6 +1168,18 @@ class RibbonEditorDialog(QDialog):
             item.setToolTip(0, _t("Not found in this QGIS session (a plugin not loaded?). Kept as it is."))
         item.setFont(0, font)
         return item
+
+    def _show_dropdown(self, item):
+        """A dropdown's row: its title or command, marked as a list."""
+        entry = item.data(0, ROLE)
+        action = entry.get("action")
+        label = entry.get("title") or (self._catalog.label(action)[0] if action else "")
+        item.setText(0, f"{label} ▾")
+        item.setText(1, f"{action or '—'} · {_t('dropdown')}")
+        item.setToolTip(0, _t("A dropdown: its command on its face, its list behind the arrow") if action
+                        else _t("A dropdown: a button opening its list"))
+        icon = self._catalog.icon(action) if action else None
+        item.setIcon(0, icon if icon is not None else QIcon())
 
     def _make_container(self, title, data):
         item = QTreeWidgetItem([title])
@@ -1058,9 +1231,17 @@ class RibbonEditorDialog(QDialog):
                 shown = set(self._candidates(group, explicit))
                 large = [n for n in data["large"] if n in shown or not self._catalog.found(n)]
                 groups.append({"title": group.text(0).strip(), "layout": data["layout"], "large": large,
-                               "rows": data["rows"], "entries": [c.data(0, ROLE) for c in _children(group)]})
+                               "rows": data["rows"], "entries": [self._entry_of(c) for c in _children(group)]})
             tabs.append({"title": tab.text(0).strip(), "groups": groups})
         return tabs
+
+    @staticmethod
+    def _entry_of(item):
+        """A tree entry as tabs_from_data gives it (a dropdown with its list)."""
+        entry = dict(item.data(0, ROLE))
+        if entry["kind"] == DROP:
+            entry["items"] = [c.data(0, ROLE)["name"] for c in _children(item)]
+        return entry
 
     def _candidates(self, group, explicit=None):
         """The names `group` can show (its commands and its toolbars' other
@@ -1069,11 +1250,12 @@ class RibbonEditorDialog(QDialog):
         names = []
         for child in _children(group):
             entry = child.data(0, ROLE)
-            if entry["kind"] == CMD:
-                names.append(entry["name"])
+            if entry["kind"] in (CMD, DROP):
+                if entry_key(entry):
+                    names.append(entry_key(entry))
             elif entry["kind"] == REST:
-                names += [n for n in self._toolbar_names(entry["toolbar"])
-                          if n not in explicit.get(entry["toolbar"], ())]
+                skip = explicit.get(entry["toolbar"], set()) | explicit.get(None, set())
+                names += [n for n in self._toolbar_names(entry["toolbar"]) if n not in skip]
         return list(dict.fromkeys(names))
 
     def _tree_text(self):
@@ -1088,11 +1270,22 @@ class RibbonEditorDialog(QDialog):
         if item is None:
             return None
         depth = _depth(item)
+        if depth == ITEM:
+            return item.parent().parent()
         if depth == ENTRY:
             return item.parent()
         if depth == GROUP:
             return item
         return item.child(item.childCount() - 1) if item.childCount() else None
+
+    def _current_dropdown(self):
+        """The dropdown chosen, or holding the item chosen; else None."""
+        item = self._tree.currentItem()
+        if item is not None and _depth(item) == ITEM:
+            return item.parent()
+        if item is not None and _depth(item) == ENTRY and item.data(0, ROLE)["kind"] == DROP:
+            return item
+        return None
 
     def _current_tab(self):
         item = self._tree.currentItem()
@@ -1134,6 +1327,45 @@ class RibbonEditorDialog(QDialog):
         self._tree.editItem(item, 0)
         self._tree_changed()
 
+    def _add_dropdown(self):
+        """A dropdown: the chosen button turned into one (it stays on its
+        face, the list goes behind its arrow), else a new one in the chosen
+        group."""
+        item = self._tree.currentItem()
+        if item is not None and _depth(item) == ENTRY and item.data(0, ROLE)["kind"] == CMD:
+            group = item.parent()
+            index = group.indexOfChild(item)
+            entry = {"kind": DROP, "action": item.data(0, ROLE)["name"], "title": None, "items": []}
+            self._syncing = True
+            group.removeChild(item)
+            dropdown = self._make_entry(entry, group)
+            group.insertChild(index, dropdown)
+            dropdown.setExpanded(True)
+            self._syncing = False
+        else:
+            group = self._current_group()
+            if group is None:
+                self._say(_t("Choose a group on the left first."), error=True)
+                return
+            current = item if item is not None and _depth(item) == ENTRY and item.parent() is group else None
+            index = group.indexOfChild(current) + 1 if current is not None else group.childCount()
+            entry = {"kind": DROP, "action": None, "title": "New Dropdown", "items": []}
+            dropdown = self._make_entry(entry, group)
+            group.insertChild(index, dropdown)
+            group.setExpanded(True)
+        self._tree.setCurrentItem(dropdown)
+        self._tree_changed()
+        self._say(_t("Drop commands or menus on the dropdown to fill its list."))
+
+    def _add_line(self):
+        dropdown = self._current_dropdown()
+        if dropdown is None:
+            self._say(_t("Choose a dropdown or one of its items first."), error=True)
+            return
+        item = self._tree.currentItem()
+        index = dropdown.indexOfChild(item) + 1 if item is not dropdown else dropdown.childCount()
+        self._tree.add_entries([{"kind": LISTED, "name": SEPARATOR}], dropdown, index)
+
     def _shift(self, step):
         _level, items = self._tree._dragged()  # pylint: disable=protected-access
         if not items:
@@ -1168,9 +1400,9 @@ class RibbonEditorDialog(QDialog):
             self._syncing = False
             if self._tree.currentItem() is item and self._title.text() != item.text(0):
                 self._title.setText(item.text(0))
-        elif column == 2 and depth == ENTRY:
+        elif column == 2 and depth == ENTRY and entry_key(item.data(0, ROLE)):
             data = item.parent().data(0, ROLE)
-            name = item.data(0, ROLE)["name"]
+            name = entry_key(item.data(0, ROLE))
             large = [n for n in data["large"] if n != name]
             if item.checkState(2) == Qt.CheckState.Checked:
                 large.append(name)
@@ -1183,7 +1415,9 @@ class RibbonEditorDialog(QDialog):
     def _show_properties(self, item, _previous=None):
         depth = _depth(item) if item is not None else None
         form = self._form
-        for widget, shown in ((self._title, depth in (TAB, GROUP)), (self._shown_as, depth in (TAB, GROUP)),
+        dropdown = depth == ENTRY and item.data(0, ROLE)["kind"] == DROP
+        for widget, shown in ((self._title, depth in (TAB, GROUP) or dropdown),
+                              (self._shown_as, depth in (TAB, GROUP)), (self._command, dropdown),
                               (self._layout, depth == GROUP), (self._large, depth == GROUP)):
             form.setRowVisible(widget, shown)
         if depth is None:
@@ -1219,6 +1453,25 @@ class RibbonEditorDialog(QDialog):
             self._info.setText("\n".join(info))
             return
         entry = item.data(0, ROLE)
+        if dropdown:
+            self._title.setText(entry.get("title") or "")
+            self._title.setPlaceholderText(_t("(the command's own label)") if entry.get("action") else "")
+            action = entry.get("action") or ""
+            index = self._command.findData(action) if action else 0
+            blocked = self._command.blockSignals(True)
+            if index >= 0:
+                self._command.setCurrentIndex(index)
+            else:
+                self._command.setEditText(action)
+            self._command.blockSignals(blocked)
+            self._info.setText(_t("Its list: drop commands or menus (submenus) on it, Add Line for a line. "
+                                  "With a command, the button runs it and its arrow opens the list; "
+                                  "without one, the button opens the list."))
+            return
+        if depth == ITEM:
+            self._info.setText(f"{item.text(0)}\n{item.text(1)}\n\n" + _t(
+                "An item of the dropdown's list. Drag it onto a group to make it a button again."))
+            return
         texts = {
             CMD: _t("A button. Tick Large in the tree for a large one."),
             REST: _t("Every button of this toolbar that no group names, in its order, also those plugins add to it later."),
@@ -1230,6 +1483,36 @@ class RibbonEditorDialog(QDialog):
         item = self._tree.currentItem()
         if item is not None and _depth(item) in (TAB, GROUP):
             item.setText(0, text)
+        elif item is not None and _depth(item) == ENTRY and item.data(0, ROLE)["kind"] == DROP:
+            self._change_dropdown(item, title=text.strip() or None)
+
+    def _command_changed(self, *_args):
+        item = self._tree.currentItem()
+        if item is None or _depth(item) != ENTRY or item.data(0, ROLE)["kind"] != DROP:
+            return
+        text = self._command.currentText().strip()
+        index = self._command.findText(text)
+        name = self._command.itemData(index) if index >= 0 else text
+        self._change_dropdown(item, action=name or None)
+
+    def _change_dropdown(self, item, **changes):
+        """Set a dropdown's action or title; its Large tick follows its key."""
+        entry = item.data(0, ROLE)
+        old = entry_key(entry)
+        entry.update(changes)
+        if entry == item.data(0, ROLE):
+            return
+        new = entry_key(entry)
+        group = item.parent()
+        data = group.data(0, ROLE)
+        if old in data["large"] and new != old:
+            data["large"] = [new if n == old else n for n in data["large"] if n != new]
+            group.setData(0, ROLE, data)
+        self._syncing = True
+        item.setData(0, ROLE, entry)
+        self._show_dropdown(item)
+        self._syncing = False
+        self._tree_changed()
 
     def _layout_changed(self, _index):
         item = self._tree.currentItem()
@@ -1255,8 +1538,7 @@ class RibbonEditorDialog(QDialog):
         group.setData(0, ROLE, data)
         self._syncing = True
         for child in _children(group):
-            entry = child.data(0, ROLE)
-            if entry["kind"] == CMD and entry["name"] == name:
+            if entry_key(child.data(0, ROLE)) == name:
                 child.setCheckState(2, row.checkState())
         self._syncing = False
         self._tree_changed()

@@ -1049,10 +1049,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Drag to reorder or move. Double-click a tab or group to rename it. Tick Large for a large button.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Search commands…</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1318,6 +1314,78 @@
     </message>
     <message>
         <source>Auto (large for up to 3 buttons, else icons)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Drag to reorder or move. Double-click a tab or group to rename it. Tick Large for a large button. Drop commands on a dropdown to fill its list.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>(none: the button only opens its list)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Button command</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Drop commands or menus on the dropdown to fill its list.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add Dropdown</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A button with a list of its own. On a chosen button: that button, with a list behind its arrow</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add Line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A line between the items of a dropdown's list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A dropdown: its command on its face, its list behind the arrow</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A dropdown: a button opening its list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Choose a dropdown or one of its items first.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Its list: drop commands or menus (submenus) on it, Add Line for a line. With a command, the button runs it and its arrow opens the list; without one, the button opens the list.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>dropdown</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>(the command's own label)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>An item of the dropdown's list. Drag it onto a group to make it a button again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>submenu</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>command</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

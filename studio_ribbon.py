@@ -176,14 +176,20 @@ LABELLED_SMALL = frozenset(("mActionZoomIn", "mActionZoomOut", "mActionZoomFullE
 # describes the format. Read into (title, groups). A group: (title, sources,
 # large, layout[, rows]). Sources are (toolbar objectName, action
 # objectNames, or None for those of the toolbar no group names); ("@",
-# objectNames) for actions of the main window not on a toolbar or menus; or
+# objectNames) for actions of the main window not on a toolbar or menus;
 # ("menu", menu objectNames) for what those menus hold that the ribbon has
-# nowhere else (see StudioRibbon._covered). Every command of QGIS's menus is
+# nowhere else (see StudioRibbon._covered); or (DROPDOWN, (action, title,
+# items)) for a button of one's own opening a list (see _dropdown). Every command of QGIS's menus is
 # on some tab, so the menu bar is folded away (set_menu_bar_folded).
 TABS_FILE = os.path.join(os.path.dirname(__file__), "ribbon.yaml")
 LAYOUTS = (LABELS, ICONS, AUTO)
 # The tab plugins' toolbars and menus get groups on: every ribbon.yaml has it.
 PLUGIN_TAB = "Plugins"
+# A dropdown source: a button opening a list of commands and menus (a
+# command of its own on its face, if it has one); SEPARATOR in its items
+# draws a line.
+DROPDOWN = "dropdown"
+SEPARATOR = "-"
 
 
 def user_tabs_file():
@@ -212,7 +218,24 @@ def _source(source, where="ribbon.yaml"):
         return "@", _names(source["main"], f"{where}: main")
     if "menu" in source:
         return "menu", _names(source["menu"], f"{where}: menu")
+    if "dropdown" in source:
+        return DROPDOWN, _dropdown(source["dropdown"], where)
     raise ValueError(f"{where}: unknown source {source!r}")
+
+
+def _dropdown(spec, where):
+    """A dropdown of ribbon.yaml as (action objectName or None, title or
+    None, item names; SEPARATOR for a line between items)."""
+    if not isinstance(spec, dict):
+        raise ValueError(f"{where}: dropdown: expected action:, title: and items:")
+    action, title = spec.get("action"), spec.get("title")
+    for key, value in (("action", action), ("title", title)):
+        if value is not None and (not isinstance(value, str) or not value):
+            raise ValueError(f"{where}: dropdown: {key}: expected text")
+    if action is None and title is None:
+        raise ValueError(f"{where}: a dropdown needs an action: or a title:")
+    items = _names(spec.get("items") or [], f"{where}: dropdown {title or action!r}: items")
+    return action, title, items
 
 
 def _group(group, where="ribbon.yaml"):
@@ -901,12 +924,20 @@ class StudioRibbon(QObject):
         self._menu_tabs = {}
         self._menus = {}
         self._placed_names = set()
+        # Names dropdowns hold (their own command and their items): not
+        # among a toolbar's other buttons, nor in a menu's "More" group.
+        self._dropdown_names = set()
         for index, (_title, groups) in enumerate(TABS):
             for group in groups:
                 for source, names in group[1]:
                     if source == "menu":
                         for name in names:
                             self._menu_tabs.setdefault(name, set()).add(index)
+                        continue
+                    if source == DROPDOWN:
+                        held = {n for n in (names[0],) + names[2] if n and n != SEPARATOR}
+                        self._dropdown_names |= held
+                        self._placed_names |= held
                         continue
                     self._placed_names.update(names or ())
                     if source != "@":
@@ -917,10 +948,14 @@ class StudioRibbon(QObject):
         for _title, groups in TABS:
             for group in groups:
                 for toolbar, names in group[1]:
-                    if toolbar not in ("@", "menu"):
+                    if toolbar not in ("@", "menu", DROPDOWN):
                         self._named.setdefault(toolbar, set()).update(names or ())
         # Names already on the ribbon while a page is built (see _covered).
         self._covered = set()
+        # The dropdowns' own actions (their menus filled when opened), by
+        # spec, and the spec of each, by C++ object.
+        self._dropdowns = {}
+        self._dropdown_of = {}
         # Widgets borrowed from toolbars: [(widget, toolbar, action)].
         self._borrowed = []
         # Action visibility as last seen, by C++ object (ActionChanged is
@@ -1124,6 +1159,14 @@ class StudioRibbon(QObject):
             if not sip.isdeleted(menu):
                 self._hub.unwatch(menu, self)
         self._menus = {}
+        for action in self._dropdowns.values():
+            if not sip.isdeleted(action):
+                menu = menu_of(action)
+                if menu is not None:
+                    menu.deleteLater()
+                action.deleteLater()
+        self._dropdowns = {}
+        self._dropdown_of = {}
         # Icons given for the ribbon go: QGIS's menus show none there.
         for action in self._adopted:
             if not sip.isdeleted(action):
@@ -1338,6 +1381,11 @@ class StudioRibbon(QObject):
             if name == "actions":
                 found += [(action, None) for action in names]
                 continue
+            if name == DROPDOWN:
+                action = self._dropdown_action(names)
+                if action is not None:
+                    found.append((action, None))
+                continue
             if name == "menu":
                 for menu_name in names:
                     menu = self._menus.get(menu_name)
@@ -1355,6 +1403,7 @@ class StudioRibbon(QObject):
             actions = [a for a in toolbar.actions() if not a.isSeparator()]
             if names is None:
                 named = self._named.get(toolbar.objectName(), set()) if toolbar.objectName() else set()
+                named = named | self._dropdown_names
                 found += [(a, toolbar) for a in actions if a.objectName() not in named or not a.objectName()]
             else:
                 by_name = {}
@@ -1511,6 +1560,9 @@ class StudioRibbon(QObject):
         """The ribbon's widget for an action: a button for it, a clone of
         QGIS's tool button, or the toolbar's widget, borrowed; None for
         widgets left out."""
+        spec = self._dropdown_of.get(sip.unwrapinstance(action))
+        if spec is not None:
+            return self._dropdown_button(parent, action, spec, kind)
         shown = toolbar.widgetForAction(action) if toolbar is not None else None
         self.placed.add(sip.unwrapinstance(action))
         if isinstance(shown, QToolButton) and shown.defaultAction() is not action:
@@ -1533,6 +1585,86 @@ class StudioRibbon(QObject):
         elif self._icons is not None:
             self._icons.swap_action(action)
         self._style(button, kind, label_for(_key(action), clean(action.text())))
+        return button
+
+    def _find(self, name):
+        """The main window's action named `name`, or a menu's own action;
+        None when there is none (yet)."""
+        window = self._window
+        action = window.findChild(QAction, name)
+        if action is not None:
+            return action
+        menu = self._menus.get(name)
+        if menu is None or sip.isdeleted(menu):
+            menu = window.findChild(QMenu, name)
+        if menu is not None:
+            return menu.menuAction()
+        for toolbar in self._toolbars():
+            for action in toolbar.actions():
+                if _key(action) == name:
+                    return action
+        return None
+
+    def _dropdown_action(self, spec):
+        """The action standing for dropdown `spec` (action, title, items):
+        named as its own command, or its title; None while its command does
+        not exist (a plugin's not loaded) and it has no title."""
+        name, title, _items = spec
+        main = self._find(name) if name else None
+        if main is None and not title:
+            return None
+        action = self._dropdowns.get(spec)
+        if action is None or sip.isdeleted(action):
+            action = QAction(self)
+            action.setObjectName(name or title)
+            menu = QMenu(self._window)
+            menu.setObjectName("studioRibbonDropdown")
+            menu.aboutToShow.connect(lambda menu=menu, spec=spec: self._fill_dropdown(menu, spec))
+            action.setMenu(menu)
+            self._dropdowns[spec] = action
+            self._dropdown_of[sip.unwrapinstance(action)] = spec
+        action.setText(tr(title, "label") if title else main.text())
+        return action
+
+    def _fill_dropdown(self, menu, spec):
+        """A dropdown's list as it opens: the commands and menus it names
+        that exist now (a menu shows as a submenu), lines for SEPARATOR."""
+        menu.clear()
+        for name in spec[2]:
+            if name == SEPARATOR:
+                menu.addSeparator()
+                continue
+            action = self._find(name)
+            if action is None:
+                continue
+            if action.icon().isNull() and self._icons is not None:
+                fallback = ICON_FALLBACKS.get(name) or (GENERIC_MENU_ICON if menu_of(action) is not None else None)
+                if fallback is not None and self._icons.adopt(action, fallback):
+                    self._adopted.append(action)
+            menu.addAction(action)
+
+    def _dropdown_button(self, parent, action, spec, kind):
+        """A dropdown's button: its own command on its face and the list
+        behind the arrow, or (without a command) the list on a click."""
+        name, title, _items = spec
+        main = self._find(name) if name else None
+        button = _Button(kind, parent=parent)
+        if main is not None:
+            self.placed.add(sip.unwrapinstance(main))
+            button.setDefaultAction(main)
+            button.setMenu(menu_of(action))
+            button.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
+            if main.icon().isNull():
+                self._give_icon(button, main, kind)
+            elif self._icons is not None:
+                self._icons.swap_action(main)
+            label = tr(title, "label") if title else label_for(_key(main), clean(main.text()))
+        else:
+            button.setDefaultAction(action)
+            button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+            self._give_icon(button, action, kind)
+            label = tr(title, "label")
+        self._style(button, kind, label)
         return button
 
     def _give_icon(self, button, action, kind):

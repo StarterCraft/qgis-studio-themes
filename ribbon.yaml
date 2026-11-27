@@ -12,7 +12,12 @@
 #     - main: [<objectNames>]   # actions of the main window not on a toolbar, or menus
 #                               # (shown as a button opening the menu)
 #     - menu: [<menu objectNames>]   # what those menus hold that the ribbon has nowhere else
-#   large:   objectNames shown as large buttons (optional)
+#     - dropdown:                    # a button with a list of its own
+#         action: <objectName>       # the command on its face (the list opens from its arrow);
+#                                    # omit for a button that only opens the list
+#         title: <label>             # its label (optional with action:)
+#         items: [<objectNames>]     # commands, or menus (shown as submenus); "-" draws a line
+#   large:   objectNames shown as large buttons (optional; a dropdown by its action, else title)
 #   layout:  labels | icons | auto   (auto: plugins' groups; large labelled buttons
 #            for up to 3 actions, else icons)
 #   rows:    explicit rows of small buttons, lists of objectNames (optional)
