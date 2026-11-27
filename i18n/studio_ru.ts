@@ -1109,12 +1109,16 @@
         <translation>Все команды этого меню, которых больше нигде нет на ленте, включая те, что плагины добавят позже.</translation>
     </message>
     <message>
-        <source>The plugin's own ribbon is loaded. Save to use it from the next start.</source>
-        <translation>Загружена лента самого плагина. Сохраните, чтобы она действовала со следующего запуска.</translation>
+        <source>The plugin's own ribbon is loaded. Save to use it.</source>
+        <translation>Загружена лента самого плагина. Сохраните, чтобы применить её.</translation>
     </message>
     <message>
-        <source>Saved. Restart QGIS to see the new ribbon.</source>
-        <translation>Сохранено. Перезапустите QGIS, чтобы увидеть новую ленту.</translation>
+        <source>Saved. The ribbon shows it now.</source>
+        <translation>Сохранено. Лента уже обновлена.</translation>
+    </message>
+    <message>
+        <source>Saved, but the ribbon could not read it: {error}</source>
+        <translation>Сохранено, но лента не смогла его прочитать: {error}</translation>
     </message>
     <message>
         <source>Command</source>

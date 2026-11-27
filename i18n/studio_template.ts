@@ -1109,11 +1109,15 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>The plugin's own ribbon is loaded. Save to use it from the next start.</source>
+        <source>The plugin's own ribbon is loaded. Save to use it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Saved. Restart QGIS to see the new ribbon.</source>
+        <source>Saved. The ribbon shows it now.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Saved, but the ribbon could not read it: {error}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

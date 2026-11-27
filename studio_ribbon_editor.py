@@ -906,6 +906,9 @@ def _resources(root):
 class RibbonEditorDialog(QDialog):
     """See the module docstring."""
 
+    # ribbon.yaml was saved: the ribbon reads it again (the plugin).
+    saved = pyqtSignal()
+
     LAYOUTS = (
         (studio_ribbon.LABELS, "Labelled buttons"),
         (studio_ribbon.ICONS, "Icons only"),
@@ -2115,7 +2118,7 @@ class RibbonEditorDialog(QDialog):
 
     def _reset(self):
         self._load(path=studio_ribbon.TABS_FILE)
-        self._say(_t("The plugin's own ribbon is loaded. Save to use it from the next start."))
+        self._say(_t("The plugin's own ribbon is loaded. Save to use it."))
 
     def _save(self):
         if self._views.currentIndex() == 1 or not self._tree_dirty:
@@ -2156,7 +2159,12 @@ class RibbonEditorDialog(QDialog):
                 self._set_text(text)
             self._text_dirty = False
         self._tree_dirty = False
-        self._say(_t("Saved. Restart QGIS to see the new ribbon."))
+        self.saved.emit()
+        if studio_ribbon.TABS_ERROR:
+            self._say(_t("Saved, but the ribbon could not read it: {error}").format(
+                error=studio_ribbon.TABS_ERROR), error=True)
+        else:
+            self._say(_t("Saved. The ribbon shows it now."))
         self._update_title()
         return True
 

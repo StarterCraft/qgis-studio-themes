@@ -3420,6 +3420,7 @@ class QgisStudioThemesPlugin:
             if editor is not None and not sip.isdeleted(editor):
                 editor.deleteLater()
             editor = self._ribbon_editor = RibbonEditorDialog(self.iface, self.iface.mainWindow())
+            editor.saved.connect(self._ribbon.reload_tabs)
         editor.show()
         editor.raise_()
         editor.activateWindow()

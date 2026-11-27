@@ -460,6 +460,13 @@ ICON_OVERRIDES = {}
 
 # The tabs shown, the file they came from and the profile file's error.
 TABS, TABS_SOURCE, TABS_ERROR = _startup_tabs()
+
+
+def reload_tabs_file():
+    """Read ribbon.yaml again (the editor saved it): TABS, TABS_SOURCE,
+    TABS_ERROR, LABEL_OVERRIDES and ICON_OVERRIDES as at startup."""
+    global TABS, TABS_SOURCE, TABS_ERROR  # pylint: disable=global-statement
+    TABS, TABS_SOURCE, TABS_ERROR = _startup_tabs()
 # The tab shown when none was chosen yet.
 DEFAULT_TAB = "Home"
 # Milliseconds before the tab shown is saved, after the last click.
@@ -1087,6 +1094,43 @@ class StudioRibbon(QObject):
         # sources), the menus watched, and every name TABS places itself.
         self._menu_tabs = {}
         self._menus = {}
+        self._index_tabs()
+        # Names already on the ribbon while a page is built (see _covered).
+        self._covered = set()
+        # The dropdowns' own actions (their menus filled when opened), by
+        # spec, and the spec of each, by C++ object.
+        self._dropdowns = {}
+        self._dropdown_of = {}
+        # Captions' and notes' stand-in actions, by (kind, text, for), and
+        # the spec of each, by C++ object.
+        self._labels = {}
+        self._label_of = {}
+        # Widgets borrowed from toolbars: [(widget, toolbar, action)].
+        self._borrowed = []
+        # Action visibility as last seen, by C++ object (ActionChanged is
+        # frequent; only a visibility change changes a page). Python ids
+        # are no keys: QGIS's objects get a new wrapper on each access.
+        self._visible = {}
+        self._dirty = set()
+        # The actions on the ribbon (by C++ object), as last built.
+        self.placed = set()
+        self._caption_font = studio_toolbars.title_font()
+        # The groups' names: where they go and which name shows (see
+        # set_style); the short names given on the page being built.
+        self._caption_position = CAPTION_POSITION
+        self._caption_names = CAPTION_NAMES
+        self._shorts_taken = set()
+        # The ribbon's size and density settings (RIBBON_SIZES, DENSITIES).
+        self._size_choice = "auto"
+        self._density = DEFAULT_DENSITY
+        self._corner = None
+
+    def _index_tabs(self):
+        """What TABS places, looked up while pages are built: the tabs of
+        each toolbar and menu, every name placed, the dropdowns' names and
+        the actions named per toolbar."""
+        self._tab_of = {}
+        self._menu_tabs = {}
         self._placed_names = set()
         # Names dropdowns hold (their own command and their items): not
         # among a toolbar's other buttons, nor in a menu's "More" group.
@@ -1117,35 +1161,26 @@ class StudioRibbon(QObject):
                 for toolbar, names in group[1]:
                     if toolbar not in ("@", "menu", DROPDOWN) + LABEL_KINDS:
                         self._named.setdefault(toolbar, set()).update(names or ())
-        # Names already on the ribbon while a page is built (see _covered).
-        self._covered = set()
-        # The dropdowns' own actions (their menus filled when opened), by
-        # spec, and the spec of each, by C++ object.
-        self._dropdowns = {}
-        self._dropdown_of = {}
-        # Captions' and notes' stand-in actions, by (kind, text, for), and
-        # the spec of each, by C++ object.
-        self._labels = {}
-        self._label_of = {}
-        # Widgets borrowed from toolbars: [(widget, toolbar, action)].
-        self._borrowed = []
-        # Action visibility as last seen, by C++ object (ActionChanged is
-        # frequent; only a visibility change changes a page). Python ids
-        # are no keys: QGIS's objects get a new wrapper on each access.
-        self._visible = {}
-        self._dirty = set()
-        # The actions on the ribbon (by C++ object), as last built.
-        self.placed = set()
-        self._caption_font = studio_toolbars.title_font()
-        # The groups' names: where they go and which name shows (see
-        # set_style); the short names given on the page being built.
-        self._caption_position = CAPTION_POSITION
-        self._caption_names = CAPTION_NAMES
-        self._shorts_taken = set()
-        # The ribbon's size and density settings (RIBBON_SIZES, DENSITIES).
-        self._size_choice = "auto"
-        self._density = DEFAULT_DENSITY
-        self._corner = None
+
+    def reload_tabs(self):
+        """ribbon.yaml changed (the editor saved it): read it again and,
+        when the ribbon shows, put it up anew in the new tabs, on the tab
+        shown before when it is still there."""
+        active = self._ribbon is not None
+        window = self._window if active else None
+        if window is not None and not sip.isdeleted(window):
+            # No flash of the toolbars between the two ribbons.
+            window.setUpdatesEnabled(False)
+        try:
+            if active:
+                self.deactivate()
+            reload_tabs_file()
+            self._index_tabs()
+            if active:
+                self.activate()
+        finally:
+            if window is not None and not sip.isdeleted(window):
+                window.setUpdatesEnabled(True)
 
     @property
     def active(self):
