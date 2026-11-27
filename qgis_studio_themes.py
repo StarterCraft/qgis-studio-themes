@@ -33,7 +33,7 @@ from qgis.PyQt.QtGui import (
 )
 from qgis.PyQt.QtSvg import QSvgRenderer
 from qgis.PyQt.QtWidgets import (
-    QAbstractButton, QAbstractItemView, QAbstractSpinBox, QApplication, QComboBox, QDialog,
+    QAbstractButton, QAbstractItemView, QAbstractSpinBox, QApplication, QCheckBox, QComboBox, QDialog,
     QDialogButtonBox, QDockWidget, QFormLayout, QLabel, QListWidget, QMenu, QMenuBar, QStackedWidget,
     QStyle, QStyledItemDelegate, QVBoxLayout,
     QLineEdit, QProgressBar, QPushButton, QSizePolicy, QStyleOptionViewItem, QTabBar, QToolBar, QToolButton, QTreeView,
@@ -41,7 +41,7 @@ from qgis.PyQt.QtWidgets import (
     QWidget,
 )
 
-from . import studio_icons, studio_pro, studio_toolbars
+from . import studio_icons, studio_pro, studio_splash, studio_toolbars
 from .studio_events import EventHub, menu_of
 from .studio_layers import LayersPanel
 from .studio_ribbon import CAPTION_NAMES, CAPTION_POSITION, DEFAULT_DENSITY, DENSITIES, RIBBON_SIZES, StudioRibbon
@@ -2664,6 +2664,14 @@ class SettingsDialog(QDialog):
         form.addRow("Toolbar name", self._names)
         form.addRow("Font size", self._size)
         form.addRow("Font weight", self._weight)
+        self._splash = QCheckBox("In the theme's colours")
+        self._splash.setChecked(studio_splash.enabled())
+        self._splash.setToolTip(
+            "QGIS's startup screen drawn in the Studio theme's colours (shown from the next start). "
+            "Written into the profile's interface customization file."
+        )
+        self._splash.toggled.connect(plugin.set_theme_splash)
+        form.addRow("Splash screen", self._splash)
         self._note = note = QLabel()
         note.setTextFormat(Qt.TextFormat.RichText)
         note.setWordWrap(True)
@@ -3202,6 +3210,8 @@ class QgisStudioThemesPlugin:
         theme = QgsApplication.themeName()
         studio = self._studio_themes()
         if theme not in studio:
+            if self._active is not None and studio_splash.enabled():
+                studio_splash.restore()
             self._deactivate()
             return
         if theme == self._active:
@@ -3241,6 +3251,8 @@ class QgisStudioThemesPlugin:
         self._style_message_bar()
         QTimer.singleShot(0, self._recolor_status_message)
         self._apply_labels()
+        if studio_splash.enabled():
+            studio_splash.apply(self._tokens, name, studio[theme][1])
         # Panel toolbars get their larger icons from the icon swapper
         # (_panel_toolbar), again after QGIS's own startup sizing.
         self._prerender()
@@ -3430,6 +3442,14 @@ class QgisStudioThemesPlugin:
         editor.show()
         editor.raise_()
         editor.activateWindow()
+
+    def set_theme_splash(self, on):
+        """The splash screen in the active theme's colours, or QGIS's own."""
+        studio_splash.set_enabled(on)
+        if not on:
+            studio_splash.restore()
+        elif self._active is not None:
+            studio_splash.apply(self._tokens, *self._studio_themes()[self._active])
 
     def settings_changed(self):
         """The settings dialog changed a setting: shown at once."""
