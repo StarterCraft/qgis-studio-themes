@@ -1559,7 +1559,7 @@ class StudioRibbon(QObject):
                 name = toolbar.objectName()
                 if name in self._tab_of or name == CORNER_TOOLBAR:
                     continue
-                spec = (toolbar.windowTitle() or name or tr("Plugin", "title"), ((toolbar, None),), (), AUTO)
+                spec = (toolbar.windowTitle() or name or tr("Plugin", "title"), ((toolbar, None),), (), AUTO, None, frozenset())
                 widget = self._group(content, spec, toolbars, seen)
                 if widget is not None:
                     layout.addWidget(widget)
@@ -1567,7 +1567,7 @@ class StudioRibbon(QObject):
             extra = [] if menu_bar is None else [
                 a for a in menu_bar.actions()
                 if menu_of(a) is not None and menu_of(a).objectName() not in self._menu_tabs]
-            widget = self._group(content, (tr("Menus", "title"), (("actions", extra),), (), LABELS), toolbars, seen)
+            widget = self._group(content, (tr("Menus", "title"), (("actions", extra),), (), LABELS, None, frozenset()), toolbars, seen)
             if widget is not None:
                 layout.addWidget(widget)
         layout.addStretch(1)
