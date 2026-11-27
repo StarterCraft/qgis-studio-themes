@@ -349,6 +349,10 @@ def parse_tabs(data):
         groups = tab.get("groups") or []
         if not isinstance(groups, list):
             raise ValueError(f"ribbon.yaml, tab {tab['title']!r}: groups: expected a list")
+        # A tab left without groups (all moved elsewhere in the editor) is
+        # not shown; the Plugins tab gets plugins' groups at run time.
+        if not groups and tab["title"] != PLUGIN_TAB:
+            continue
         tabs.append((tab["title"], tuple(_group(g, f"tab {tab['title']!r}") for g in groups)))
     titles = [title for title, _groups in tabs]
     twice = sorted({title for title in titles if titles.count(title) > 1})
