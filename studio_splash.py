@@ -38,7 +38,7 @@ SPLASH_OWNED_SETTING = "studio_themes/themeSplashOwned"
 # Which picture splash.png holds now (see _write_image).
 SPLASH_STAMP_SETTING = "studio_themes/themeSplashStamp"
 # Raise when draw() changes, so drawn splashes are redrawn once.
-DRAW_VERSION = 1
+DRAW_VERSION = 2
 BUILTIN = ":/images/splash/splash.png"
 DEFAULT_SIZE = QSize(1977, 946)
 FONT = "Inter"
@@ -98,7 +98,7 @@ def draw(tokens, theme_name):
     p = QPainter(image)
     p.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing
                      | QPainter.RenderHint.SmoothPixmapTransform)
-    band = int(h * 0.11)
+    band = int(h * 0.06)
     p.fillRect(0, h - band, w, band, band_color)
     p.fillRect(0, h - band - int(h * 0.008), w, int(h * 0.008), accent)
 
