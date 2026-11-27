@@ -39,7 +39,7 @@ import re
 from qgis.core import QgsSettings
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import QEvent, QObject, QRect, QSize, Qt, QTimer
-from qgis.PyQt.QtGui import QFont, QFontInfo, QFontMetrics, QIcon, QPainter, QPalette, QPixmap
+from qgis.PyQt.QtGui import QFont, QFontInfo, QFontMetrics, QIcon, QIconEngine, QPainter, QPalette, QPixmap
 from qgis.PyQt.QtWidgets import (
     QAction, QApplication, QFrame, QGridLayout, QHBoxLayout, QLabel, QMenu, QScrollArea, QSizePolicy, QStackedWidget, QTabBar,
     QToolBar, QToolButton, QVBoxLayout, QWidget, QWidgetAction,
@@ -76,8 +76,11 @@ ROW_SPACING = SPACING
 BODY = ROWS * ROW_HEIGHT + (ROWS - 1) * ROW_SPACING
 LARGE_MIN_WIDTH = 56
 # A large button's room besides its icon and two label lines: its padding
-# (style.qss) and the gap Qt leaves under the icon.
-LABEL_ROOM = 11
+# (style.qss), the gap Qt leaves under the icon and ICON_GAP (4).
+LABEL_ROOM = 7 + 4
+# The gap between a button's icon and its label: beside a small button's
+# icon, under a large one's (an empty strip in the icon, _GapIcon).
+ICON_GAP = 4
 # The height of a two-line label in the UI font at the default size.
 DEFAULT_LABEL = 30
 # One label line (set_sizes): a large button with a one-line label moves its
@@ -86,7 +89,7 @@ DEFAULT_LABEL = 30
 LABEL_LINE = DEFAULT_LABEL // 2
 # style.qss's padding above and below a large button's icon and label, per
 # density (QToolButton[studioRibbon="large"]).
-LARGE_PADDING = {"standard": (6, 5), "compact": (5, 4)}
+LARGE_PADDING = {"standard": (4, 3), "compact": (3, 2)}
 # Room around a group's buttons (left, top, right, bottom), per density:
 # compact keeps less space above and below them, but enough that the icons
 # and names do not touch the page's edges.
@@ -120,14 +123,14 @@ def ribbon_sizes(toolbar, compact=False, label=DEFAULT_LABEL):
     """(small icon, large icon, row height, row spacing, large button
     minimum width) for a toolbar icon size `toolbar`: small buttons a sixth
     smaller than a toolbar's (on a 4 px step, never below 16), large ones
-    12 px larger (8 for the smallest), rows 8 px taller than their icons
-    (6 px when `compact`). The rows are set further apart where a large
+    12 px larger (8 for the smallest), rows 4 px taller than their icons
+    (2 px when `compact`). The rows are set further apart where a large
     button's icon and two-line label (`label` px high, by the UI font) need
     more than their height, so a label is never cut short. 16 gives 16, 24
-    and 24; 24 gives 20, 32 and 28; 32 gives 28, 40 and 36."""
+    and 20; 24 gives 20, 32 and 24; 32 gives 28, 40 and 32."""
     small = max(16, round(toolbar * 5 / 6 / 4) * 4)
     large = small + (12 if small >= 20 else 8)
-    row = small + (6 if compact else 8)
+    row = small + (2 if compact else 4)
     need = large + LABEL_ROOM + label
     spacing = max(SPACING, -(-(need - ROWS * row) // (ROWS - 1)))
     return small, large, row, spacing, large + 24
@@ -538,6 +541,32 @@ def _key(action):
     return menu.objectName() if menu is not None else ""
 
 
+class _GapEngine(QIconEngine):
+    """An icon with an empty strip right of it (`under` False) or under it,
+    so Qt leaves that much more room between a button's icon and label."""
+
+    def __init__(self, icon, under):
+        super().__init__()
+        self.icon = icon
+        self.under = under
+
+    def paint(self, painter, rect, mode, state):
+        side = rect.width() if self.under else rect.height()
+        self.icon.paint(painter, QRect(rect.x(), rect.y(), side, side),
+                        Qt.AlignmentFlag.AlignCenter, mode, state)
+
+    def pixmap(self, size, mode, state):
+        pixmap = QPixmap(size)
+        pixmap.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(pixmap)
+        self.paint(painter, QRect(0, 0, size.width(), size.height()), mode, state)
+        painter.end()
+        return pixmap
+
+    def clone(self):
+        return _GapEngine(self.icon, self.under)
+
+
 class _Button(QToolButton):
     """A ribbon button. With a fixed `label`, it keeps it when its action
     changes (QToolButton takes the action's text again on every change)."""
@@ -562,6 +591,19 @@ class _Button(QToolButton):
             self.setText(self._label)
         if self._placeholder is not None and self.icon().isNull():
             self.setIcon(self._placeholder)
+        self._gap_icon()
+
+    def _gap_icon(self):
+        """Keep ICON_GAP between icon and label (see _GapEngine)."""
+        kind = self.property("studioRibbon")
+        icon = self.icon()
+        if kind not in ("large", "small") or icon.isNull():
+            return
+        if icon.cacheKey() == getattr(self, "_gapped", None):
+            return
+        gapped = QIcon(_GapEngine(icon, kind == "large"))
+        self._gapped = gapped.cacheKey()
+        self.setIcon(gapped)
 
     def set_placeholder(self, size):
         """An empty icon for an action without one, so its label lines up
@@ -570,6 +612,7 @@ class _Button(QToolButton):
         pixmap.fill(Qt.GlobalColor.transparent)
         self._placeholder = QIcon(pixmap)
         self.setIcon(self._placeholder)
+        self._gap_icon()
 
     def set_label(self, label):
         self._label = label
@@ -593,6 +636,7 @@ class _Button(QToolButton):
         if mine is None or sip.unwrapinstance(mine) != sip.unwrapinstance(current):
             self.setDefaultAction(current)
             self.set_label(self._label)
+            self._gap_icon()
 
 
 class _BorrowingMenu(QMenu):
@@ -1640,13 +1684,13 @@ class StudioRibbon(QObject):
     @staticmethod
     def _style(button, kind, label):
         if kind == "large":
-            button.setIconSize(QSize(LARGE_ICON, LARGE_ICON))
+            button.setIconSize(QSize(LARGE_ICON, LARGE_ICON + ICON_GAP))
             button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
             button.set_label(two_lines(label))
             button.setFixedHeight(BODY)
             button.setMinimumWidth(LARGE_MIN_WIDTH)
         elif kind == "small":
-            button.setIconSize(QSize(SMALL_ICON, SMALL_ICON))
+            button.setIconSize(QSize(SMALL_ICON + ICON_GAP, SMALL_ICON))
             button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
             button.set_label(label)
             button.setFixedHeight(ROW_HEIGHT)
@@ -1655,6 +1699,7 @@ class StudioRibbon(QObject):
             button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
             button.setFixedHeight(ROW_HEIGHT)
             button.setMinimumWidth(ROW_HEIGHT + 4)
+        button._gap_icon()  # pylint: disable=protected-access
 
     def _fill_corner(self):
         """The Help toolbar's buttons right of the tabs."""

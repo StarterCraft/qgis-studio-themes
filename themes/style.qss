@@ -599,31 +599,31 @@ QLabel#studioRibbonCaption {
 /* Large buttons' top and bottom padding is mirrored in
  * studio_ribbon.LARGE_PADDING (one-line labels add half a line to both). */
 QToolButton[studioRibbon="large"] {
-    padding: 6px 10px 5px 10px;
+    padding: 4px 6px 3px 6px;
 }
 QToolButton[studioRibbon="small"] {
-    padding: 4px 10px 4px 6px;
+    padding: 2px 6px 2px 3px;
 }
 QToolButton[studioRibbon="icon"] {
-    padding: 4px;
+    padding: 2px;
 }
 QToolButton[studioRibbon="large"][popupMode="1"] {
-    padding-right: 20px;
+    padding-right: 16px;
 }
 QToolButton[studioRibbon="small"][popupMode="1"],
 QToolButton[studioRibbon="small"][popupMode="2"] {
-    padding-right: 20px;
+    padding-right: 16px;
 }
 /* Compact density: rows 2 px lower, so 1 px less padding above and below
  * the icons (studio_ribbon.ribbon_sizes). */
 QToolButton[studioRibbon="large"][studioDensity="compact"] {
-    padding-top: 5px;
-    padding-bottom: 4px;
+    padding-top: 3px;
+    padding-bottom: 2px;
 }
 QToolButton[studioRibbon="small"][studioDensity="compact"],
 QToolButton[studioRibbon="icon"][studioDensity="compact"] {
-    padding-top: 3px;
-    padding-bottom: 3px;
+    padding-top: 1px;
+    padding-bottom: 1px;
 }
 QToolButton#studioRibbonCollapse {
     qproperty-icon: url();
