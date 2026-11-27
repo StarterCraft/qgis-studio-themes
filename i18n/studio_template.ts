@@ -1010,4 +1010,315 @@
         <translation type="unfinished"></translation>
     </message>
 </context>
+<context>
+    <name>editor</name>
+    <message>
+        <source>Ribbon Editor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Visual</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>YAML</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reset to Default</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load the plugin's own ribbon. Save to use it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Revert</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Load the saved file again, dropping changes not saved.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Drag to reorder or move. Double-click a tab or group to rename it. Tick Large for a large button.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search commands…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Only commands not on the ribbon</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add to Group →</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add the chosen commands to the group chosen on the left (or double-click them)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Drag commands onto a group. Grey: on the ribbon already. Drag a toolbar for all its buttons no group names, or a menu's “everything else” for its other commands.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Properties</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Shown as</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Buttons</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Large buttons</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Check</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Drag for a button opening this menu</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A button. Tick Large in the tree for a large one.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Every button of this toolbar that no group names, in its order, also those plugins add to it later.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Every command of this menu the ribbon shows nowhere else, also those plugins add to it later.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The plugin's own ribbon is loaded. Save to use it from the next start.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Saved. Restart QGIS to see the new ribbon.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Command</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ribbon</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Name / source</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Large</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add Tab</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A new tab after the current one</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add Group</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A new group in the current tab</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Take the selected items off the ribbon (Delete)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Move up</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Move down</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Expand All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Collapse All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The file's format is described in its header. Checked before the visual view or Save uses it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Toolbars</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Menus</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The menu's commands that are nowhere else on the ribbon (a “More” group)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Choose a group on the left first.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Not found in this QGIS session (a plugin not loaded?). Kept as it is.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add a tab first.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Choose a tab, group or button to see its properties.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This file does not read, so the default ribbon is shown. Fix it in the YAML view.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Not saved: the file does not read.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save the changes to the ribbon?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Saved to {path}. The ribbon is rebuilt from it the next time QGIS starts.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Drag for all buttons of this toolbar that no group names</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Everything else in “{menu}”</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>menu button</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>main window command</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The toolbar's buttons that no group names, also those plugins add to it</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>(as written: no translation)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Plugins' own toolbars and menus are added to this tab.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The default ribbon is shown: this file did not read when QGIS started.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Available commands</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>toolbar “{toolbar}”</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The file reads.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Fix the YAML first: the visual view needs a file that reads.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>On the ribbon: {where}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All other buttons of “{toolbar}”</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>toolbar</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>menu</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Rows of small buttons (edit them in the YAML view): {rows}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not read {path}: {error}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not save {path}: {error}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>On the ribbon through another entry: {where}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Labelled buttons</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Icons only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Auto (large for up to 3 buttons, else icons)</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
 </TS>

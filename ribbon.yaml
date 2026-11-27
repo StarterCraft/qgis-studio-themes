@@ -1,4 +1,7 @@
 # The ribbon's tabs, in order (read by studio_ribbon.py at startup).
+# A profile's own copy (studio_themes/ribbon.yaml in the QGIS profile folder, saved by
+# Plugins > QGIS Studio Themes > Ribbon Editor) is read instead when there is one.
+# A tab titled "Plugins" is needed: plugins' own toolbars and menus go there.
 # Tab and group titles stay English; translations are in i18n/ by context "title".
 #
 # A group:

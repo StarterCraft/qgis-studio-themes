@@ -36,7 +36,7 @@ from qgis.PyQt.QtWidgets import (
     QAbstractButton, QAbstractItemView, QAbstractSpinBox, QApplication, QComboBox, QDialog,
     QDialogButtonBox, QDockWidget, QFormLayout, QLabel, QListWidget, QMenu, QMenuBar, QStackedWidget,
     QStyle, QStyledItemDelegate, QVBoxLayout,
-    QLineEdit, QProgressBar, QSizePolicy, QStyleOptionViewItem, QTabBar, QToolBar, QToolButton, QTreeView,
+    QLineEdit, QProgressBar, QPushButton, QSizePolicy, QStyleOptionViewItem, QTabBar, QToolBar, QToolButton, QTreeView,
     QTreeWidget,
     QWidget,
 )
@@ -45,6 +45,7 @@ from . import studio_icons, studio_pro, studio_toolbars
 from .studio_events import EventHub, menu_of
 from .studio_layers import LayersPanel
 from .studio_ribbon import CAPTION_NAMES, CAPTION_POSITION, DEFAULT_DENSITY, DENSITIES, RIBBON_SIZES, StudioRibbon
+from .studio_ribbon_editor import RibbonEditorDialog
 from .studio_toolbars import NAME_STYLES, POSITIONS, TITLE_SIZE, TITLE_SIZES, WEIGHTS, ToolbarLabels, name_rules
 from .studio_tokens import code_editor_ini, is_dark, parse_color, parse_tokens, render, resolve_tokens
 
@@ -2655,6 +2656,10 @@ class SettingsDialog(QDialog):
         form.addRow("Icons", self._icon_style)
         form.addRow("Ribbon size", self._ribbon_size)
         form.addRow("Ribbon density", self._density)
+        self._edit_ribbon = QPushButton("Edit Ribbon…")
+        self._edit_ribbon.setToolTip("Choose the ribbon's tabs, groups and buttons (shown from the next start).")
+        self._edit_ribbon.clicked.connect(plugin.show_ribbon_editor)
+        form.addRow("Ribbon layout", self._edit_ribbon)
         form.addRow("Toolbar name position", self._position)
         form.addRow("Toolbar name", self._names)
         form.addRow("Font size", self._size)
@@ -2744,6 +2749,7 @@ class SettingsDialog(QDialog):
             self._position.findData("bottom"), self.RIBBON_BOTTOM if ribbon else dict(self.POSITIONS)["bottom"])
         self._ribbon_size.setEnabled(ribbon)
         self._density.setEnabled(ribbon)
+        self._edit_ribbon.setEnabled(ribbon)
         self._names.setEnabled(position != "off")
         for combo in (self._size, self._weight):
             combo.setEnabled(position != "off")
@@ -2831,6 +2837,9 @@ class QgisStudioThemesPlugin:
         self._ready = False
         self._settings_action = None
         self._settings_dialog = None
+        # Plugins > QGIS Studio Themes > Ribbon Editor… (studio_ribbon_editor).
+        self._ribbon_editor_action = None
+        self._ribbon_editor = None
         self._compact = False
         self._extra_tokens = {}
         # Themes (re)built by this plugin load, i.e. new or updated.
@@ -2913,6 +2922,9 @@ class QgisStudioThemesPlugin:
         )
         self._settings_action.triggered.connect(self._show_settings)
         self.iface.addPluginToMenu(MENU_NAME, self._settings_action)
+        self._ribbon_editor_action = QAction("Ribbon Editor…", self.iface.mainWindow())
+        self._ribbon_editor_action.triggered.connect(self.show_ribbon_editor)
+        self.iface.addPluginToMenu(MENU_NAME, self._ribbon_editor_action)
         self._hook_sizes()
         self._compact = self._compact_sizes()
         # The main menu is one point larger than the UI font, so it reads as
@@ -3075,6 +3087,15 @@ class QgisStudioThemesPlugin:
             self.iface.removePluginMenu(MENU_NAME, self._settings_action)
             self._settings_action.deleteLater()
             self._settings_action = None
+        if self._ribbon_editor_action is not None:
+            self.iface.removePluginMenu(MENU_NAME, self._ribbon_editor_action)
+            self._ribbon_editor_action.deleteLater()
+            self._ribbon_editor_action = None
+        if self._ribbon_editor is not None:
+            if not sip.isdeleted(self._ribbon_editor):
+                self._ribbon_editor.hide()
+                self._ribbon_editor.deleteLater()
+            self._ribbon_editor = None
         if self._settings_dialog is not None:
             if not sip.isdeleted(self._settings_dialog):
                 self._settings_dialog.close()
@@ -3383,6 +3404,18 @@ class QgisStudioThemesPlugin:
         self._settings_dialog.show()
         self._settings_dialog.raise_()
         self._settings_dialog.activateWindow()
+
+    def show_ribbon_editor(self):
+        """The ribbon editor; a new one once the last was closed, so its
+        list of commands is QGIS's current one."""
+        editor = self._ribbon_editor
+        if editor is None or sip.isdeleted(editor) or not editor.isVisible():
+            if editor is not None and not sip.isdeleted(editor):
+                editor.deleteLater()
+            editor = self._ribbon_editor = RibbonEditorDialog(self.iface, self.iface.mainWindow())
+        editor.show()
+        editor.raise_()
+        editor.activateWindow()
 
     def settings_changed(self):
         """The settings dialog changed a setting: shown at once."""

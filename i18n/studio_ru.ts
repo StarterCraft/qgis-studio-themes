@@ -1010,4 +1010,315 @@
         <translation>Свернуть ленту до вкладок (двойной щелчок по вкладке)</translation>
     </message>
 </context>
+<context>
+    <name>editor</name>
+    <message>
+        <source>Ribbon Editor</source>
+        <translation>Редактор ленты</translation>
+    </message>
+    <message>
+        <source>Visual</source>
+        <translation>Визуально</translation>
+    </message>
+    <message>
+        <source>YAML</source>
+        <translation>YAML</translation>
+    </message>
+    <message>
+        <source>Reset to Default</source>
+        <translation>Сбросить по умолчанию</translation>
+    </message>
+    <message>
+        <source>Load the plugin's own ribbon. Save to use it.</source>
+        <translation>Загрузить ленту самого плагина. Чтобы применить её, нажмите «Сохранить».</translation>
+    </message>
+    <message>
+        <source>Revert</source>
+        <translation>Вернуть</translation>
+    </message>
+    <message>
+        <source>Load the saved file again, dropping changes not saved.</source>
+        <translation>Заново загрузить сохранённый файл, отбросив несохранённые изменения.</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation>Сохранить</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Закрыть</translation>
+    </message>
+    <message>
+        <source>Drag to reorder or move. Double-click a tab or group to rename it. Tick Large for a large button.</source>
+        <translation>Перетаскивайте, чтобы менять порядок и переносить. Двойной щелчок по вкладке или группе — переименовать. Отметка «Крупная» — крупная кнопка.</translation>
+    </message>
+    <message>
+        <source>Search commands…</source>
+        <translation>Поиск команд…</translation>
+    </message>
+    <message>
+        <source>Only commands not on the ribbon</source>
+        <translation>Только команды, которых нет на ленте</translation>
+    </message>
+    <message>
+        <source>Add to Group →</source>
+        <translation>Добавить в группу →</translation>
+    </message>
+    <message>
+        <source>Add the chosen commands to the group chosen on the left (or double-click them)</source>
+        <translation>Добавить выбранные команды в группу, выбранную слева (или дважды щёлкните по ним)</translation>
+    </message>
+    <message>
+        <source>Drag commands onto a group. Grey: on the ribbon already. Drag a toolbar for all its buttons no group names, or a menu's “everything else” for its other commands.</source>
+        <translation>Перетащите команды на группу. Серые уже есть на ленте. Перетащите панель инструментов — получите все её кнопки, не названные в группах; «всё остальное» меню — его прочие команды.</translation>
+    </message>
+    <message>
+        <source>Properties</source>
+        <translation>Свойства</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Название</translation>
+    </message>
+    <message>
+        <source>Shown as</source>
+        <translation>На ленте</translation>
+    </message>
+    <message>
+        <source>Buttons</source>
+        <translation>Кнопки</translation>
+    </message>
+    <message>
+        <source>Large buttons</source>
+        <translation>Крупные кнопки</translation>
+    </message>
+    <message>
+        <source>Check</source>
+        <translation>Проверить</translation>
+    </message>
+    <message>
+        <source>Drag for a button opening this menu</source>
+        <translation>Перетащите, чтобы получить кнопку, открывающую это меню</translation>
+    </message>
+    <message>
+        <source>A button. Tick Large in the tree for a large one.</source>
+        <translation>Кнопка. Отметьте «Крупная» в дереве, чтобы сделать её крупной.</translation>
+    </message>
+    <message>
+        <source>Every button of this toolbar that no group names, in its order, also those plugins add to it later.</source>
+        <translation>Все кнопки этой панели, не названные ни в одной группе, по порядку, включая те, что плагины добавят позже.</translation>
+    </message>
+    <message>
+        <source>Every command of this menu the ribbon shows nowhere else, also those plugins add to it later.</source>
+        <translation>Все команды этого меню, которых больше нигде нет на ленте, включая те, что плагины добавят позже.</translation>
+    </message>
+    <message>
+        <source>The plugin's own ribbon is loaded. Save to use it from the next start.</source>
+        <translation>Загружена лента самого плагина. Сохраните, чтобы она действовала со следующего запуска.</translation>
+    </message>
+    <message>
+        <source>Saved. Restart QGIS to see the new ribbon.</source>
+        <translation>Сохранено. Перезапустите QGIS, чтобы увидеть новую ленту.</translation>
+    </message>
+    <message>
+        <source>Command</source>
+        <translation>Команда</translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation>Имя</translation>
+    </message>
+    <message>
+        <source>Ribbon</source>
+        <translation>Лента</translation>
+    </message>
+    <message>
+        <source>Name / source</source>
+        <translation>Имя / источник</translation>
+    </message>
+    <message>
+        <source>Large</source>
+        <translation>Крупная</translation>
+    </message>
+    <message>
+        <source>Add Tab</source>
+        <translation>Добавить вкладку</translation>
+    </message>
+    <message>
+        <source>A new tab after the current one</source>
+        <translation>Новая вкладка после текущей</translation>
+    </message>
+    <message>
+        <source>Add Group</source>
+        <translation>Добавить группу</translation>
+    </message>
+    <message>
+        <source>A new group in the current tab</source>
+        <translation>Новая группа в текущей вкладке</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>Удалить</translation>
+    </message>
+    <message>
+        <source>Take the selected items off the ribbon (Delete)</source>
+        <translation>Убрать выбранное с ленты (Delete)</translation>
+    </message>
+    <message>
+        <source>Move up</source>
+        <translation>Выше</translation>
+    </message>
+    <message>
+        <source>Move down</source>
+        <translation>Ниже</translation>
+    </message>
+    <message>
+        <source>Expand All</source>
+        <translation>Развернуть все</translation>
+    </message>
+    <message>
+        <source>Collapse All</source>
+        <translation>Свернуть все</translation>
+    </message>
+    <message>
+        <source>The file's format is described in its header. Checked before the visual view or Save uses it.</source>
+        <translation>Формат файла описан в его заголовке. Файл проверяется перед переходом в визуальный режим и перед сохранением.</translation>
+    </message>
+    <message>
+        <source>Toolbars</source>
+        <translation>Панели инструментов</translation>
+    </message>
+    <message>
+        <source>Menus</source>
+        <translation>Меню</translation>
+    </message>
+    <message>
+        <source>The menu's commands that are nowhere else on the ribbon (a “More” group)</source>
+        <translation>Команды меню, которых больше нигде нет на ленте (группа «Ещё»)</translation>
+    </message>
+    <message>
+        <source>Choose a group on the left first.</source>
+        <translation>Сначала выберите группу слева.</translation>
+    </message>
+    <message>
+        <source>Not found in this QGIS session (a plugin not loaded?). Kept as it is.</source>
+        <translation>Не найдено в этом сеансе QGIS (плагин не загружен?). Оставлено как есть.</translation>
+    </message>
+    <message>
+        <source>Add a tab first.</source>
+        <translation>Сначала добавьте вкладку.</translation>
+    </message>
+    <message>
+        <source>Choose a tab, group or button to see its properties.</source>
+        <translation>Выберите вкладку, группу или кнопку, чтобы увидеть её свойства.</translation>
+    </message>
+    <message>
+        <source>This file does not read, so the default ribbon is shown. Fix it in the YAML view.</source>
+        <translation>Файл не читается, поэтому показана лента по умолчанию. Исправьте его в режиме YAML.</translation>
+    </message>
+    <message>
+        <source>Not saved: the file does not read.</source>
+        <translation>Не сохранено: файл не читается.</translation>
+    </message>
+    <message>
+        <source>Save the changes to the ribbon?</source>
+        <translation>Сохранить изменения ленты?</translation>
+    </message>
+    <message>
+        <source>Saved to {path}. The ribbon is rebuilt from it the next time QGIS starts.</source>
+        <translation>Сохраняется в {path}. Лента собирается из него при следующем запуске QGIS.</translation>
+    </message>
+    <message>
+        <source>Drag for all buttons of this toolbar that no group names</source>
+        <translation>Перетащите, чтобы получить все кнопки этой панели, не названные в группах</translation>
+    </message>
+    <message>
+        <source>Everything else in “{menu}”</source>
+        <translation>Всё остальное в «{menu}»</translation>
+    </message>
+    <message>
+        <source>menu button</source>
+        <translation>кнопка меню</translation>
+    </message>
+    <message>
+        <source>main window command</source>
+        <translation>команда главного окна</translation>
+    </message>
+    <message>
+        <source>The toolbar's buttons that no group names, also those plugins add to it</source>
+        <translation>Кнопки панели, не названные ни в одной группе, включая добавленные плагинами</translation>
+    </message>
+    <message>
+        <source>(as written: no translation)</source>
+        <translation>(как написано: перевода нет)</translation>
+    </message>
+    <message>
+        <source>Plugins' own toolbars and menus are added to this tab.</source>
+        <translation>На эту вкладку добавляются собственные панели и меню плагинов.</translation>
+    </message>
+    <message>
+        <source>The default ribbon is shown: this file did not read when QGIS started.</source>
+        <translation>Показана лента по умолчанию: при запуске QGIS этот файл не прочитался.</translation>
+    </message>
+    <message>
+        <source>Available commands</source>
+        <translation>Доступные команды</translation>
+    </message>
+    <message>
+        <source>toolbar “{toolbar}”</source>
+        <translation>панель «{toolbar}»</translation>
+    </message>
+    <message>
+        <source>The file reads.</source>
+        <translation>Файл читается.</translation>
+    </message>
+    <message>
+        <source>Fix the YAML first: the visual view needs a file that reads.</source>
+        <translation>Сначала исправьте YAML: визуальному режиму нужен читаемый файл.</translation>
+    </message>
+    <message>
+        <source>On the ribbon: {where}</source>
+        <translation>На ленте: {where}</translation>
+    </message>
+    <message>
+        <source>All other buttons of “{toolbar}”</source>
+        <translation>Все остальные кнопки «{toolbar}»</translation>
+    </message>
+    <message>
+        <source>toolbar</source>
+        <translation>панель</translation>
+    </message>
+    <message>
+        <source>menu</source>
+        <translation>меню</translation>
+    </message>
+    <message>
+        <source>Rows of small buttons (edit them in the YAML view): {rows}</source>
+        <translation>Ряды мелких кнопок (правятся в режиме YAML): {rows}</translation>
+    </message>
+    <message>
+        <source>Could not read {path}: {error}</source>
+        <translation>Не удалось прочитать {path}: {error}</translation>
+    </message>
+    <message>
+        <source>Could not save {path}: {error}</source>
+        <translation>Не удалось сохранить {path}: {error}</translation>
+    </message>
+    <message>
+        <source>On the ribbon through another entry: {where}</source>
+        <translation>На ленте через другой элемент: {where}</translation>
+    </message>
+    <message>
+        <source>Labelled buttons</source>
+        <translation>Кнопки с подписями</translation>
+    </message>
+    <message>
+        <source>Icons only</source>
+        <translation>Только значки</translation>
+    </message>
+    <message>
+        <source>Auto (large for up to 3 buttons, else icons)</source>
+        <translation>Авто (крупные, если кнопок не больше 3, иначе значки)</translation>
+    </message>
+</context>
 </TS>

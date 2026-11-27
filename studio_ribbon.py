@@ -170,48 +170,126 @@ AUTO_LARGE = 3
 # The most used commands of icon-only groups: labelled small buttons, in
 # their own column(s) before the group's other (icon-only) buttons.
 LABELLED_SMALL = frozenset(("mActionZoomIn", "mActionZoomOut", "mActionZoomFullExtent"))
-# The tabs, in order: ribbon.yaml beside this file (its header describes the
-# format), read into (title, groups). A group: (title, sources, large,
-# layout[, rows]). Sources are (toolbar objectName, action objectNames, or
-# None for those of the toolbar no group names); ("@", objectNames) for
-# actions of the main window not on a toolbar or menus; or ("menu", menu
-# objectNames) for what those menus hold that the ribbon has nowhere else
-# (see StudioRibbon._covered). Every command of QGIS's menus is on some tab,
-# so the menu bar is folded away (set_menu_bar_folded).
+# The tabs, in order: the profile's own ribbon.yaml (USER_TABS_FILE, saved
+# by the ribbon editor, studio_ribbon_editor) when there is one and it reads,
+# else the plugin's (TABS_FILE); read once, at startup. Their header
+# describes the format. Read into (title, groups). A group: (title, sources,
+# large, layout[, rows]). Sources are (toolbar objectName, action
+# objectNames, or None for those of the toolbar no group names); ("@",
+# objectNames) for actions of the main window not on a toolbar or menus; or
+# ("menu", menu objectNames) for what those menus hold that the ribbon has
+# nowhere else (see StudioRibbon._covered). Every command of QGIS's menus is
+# on some tab, so the menu bar is folded away (set_menu_bar_folded).
 TABS_FILE = os.path.join(os.path.dirname(__file__), "ribbon.yaml")
 LAYOUTS = (LABELS, ICONS, AUTO)
+# The tab plugins' toolbars and menus get groups on: every ribbon.yaml has it.
+PLUGIN_TAB = "Plugins"
 
 
-def _source(source):
+def user_tabs_file():
+    """The profile's own ribbon.yaml (studio_themes/ribbon.yaml in the QGIS
+    profile folder), which the plugin's updates leave alone."""
+    from qgis.core import QgsApplication  # pylint: disable=import-outside-toplevel
+    return os.path.join(QgsApplication.qgisSettingsDirPath(), "studio_themes", "ribbon.yaml")
+
+
+def _names(value, where):
+    if not isinstance(value, list) or not all(isinstance(n, str) and n for n in value):
+        raise ValueError(f"{where}: expected a list of objectNames")
+    return tuple(value)
+
+
+def _source(source, where="ribbon.yaml"):
     """A source of ribbon.yaml as a TABS source."""
+    if not isinstance(source, dict):
+        raise ValueError(f"{where}: a source is a mapping (toolbar:, main: or menu:)")
     if "toolbar" in source:
+        if not isinstance(source["toolbar"], str) or not source["toolbar"]:
+            raise ValueError(f"{where}: toolbar: expected a toolbar objectName")
         actions = source.get("actions")
-        return source["toolbar"], None if actions is None else tuple(actions)
+        return source["toolbar"], None if actions is None else _names(actions, f"{where}: actions")
     if "main" in source:
-        return "@", tuple(source["main"])
+        return "@", _names(source["main"], f"{where}: main")
     if "menu" in source:
-        return "menu", tuple(source["menu"])
-    raise ValueError(f"ribbon.yaml: unknown source {source!r}")
+        return "menu", _names(source["menu"], f"{where}: menu")
+    raise ValueError(f"{where}: unknown source {source!r}")
 
 
-def _group(group):
+def _group(group, where="ribbon.yaml"):
     """A group of ribbon.yaml as a TABS group."""
+    if not isinstance(group, dict) or not isinstance(group.get("title"), str) or not group["title"]:
+        raise ValueError(f"{where}: every group needs a title")
+    where = f"{where}, group {group['title']!r}"
     layout = group.get("layout", LABELS)
     if layout not in LAYOUTS:
-        raise ValueError(f"ribbon.yaml: group {group.get('title')!r}: unknown layout {layout!r}")
-    item = (group["title"], tuple(_source(s) for s in group["sources"]), tuple(group.get("large") or ()), layout)
+        raise ValueError(f"{where}: unknown layout {layout!r} (labels, icons or auto)")
+    sources = group.get("sources") or []
+    if not isinstance(sources, list):
+        raise ValueError(f"{where}: sources: expected a list")
+    item = (group["title"], tuple(_source(s, where) for s in sources),
+            _names(group.get("large") or [], f"{where}: large"), layout)
     rows = group.get("rows")
-    return item + (tuple(tuple(row) for row in rows),) if rows else item
+    if rows and (not isinstance(rows, list) or not all(isinstance(r, list) for r in rows)):
+        raise ValueError(f"{where}: rows: expected a list of lists of objectNames")
+    return item + (tuple(_names(row, f"{where}: rows") for row in rows),) if rows else item
+
+
+def parse_tabs(data):
+    """The tabs of ribbon.yaml's parsed `data` as ((title, groups), ...);
+    ValueError, in plain words, for anything the ribbon cannot show."""
+    if not isinstance(data, dict) or not isinstance(data.get("tabs"), list) or not data["tabs"]:
+        raise ValueError("ribbon.yaml: expected tabs: with a list of tabs")
+    tabs = []
+    for tab in data["tabs"]:
+        if not isinstance(tab, dict) or not isinstance(tab.get("title"), str) or not tab["title"]:
+            raise ValueError("ribbon.yaml: every tab needs a title")
+        groups = tab.get("groups") or []
+        if not isinstance(groups, list):
+            raise ValueError(f"ribbon.yaml, tab {tab['title']!r}: groups: expected a list")
+        tabs.append((tab["title"], tuple(_group(g, f"tab {tab['title']!r}") for g in groups)))
+    titles = [title for title, _groups in tabs]
+    twice = sorted({title for title in titles if titles.count(title) > 1})
+    if twice:
+        raise ValueError(f"ribbon.yaml: tab titles must differ: {', '.join(twice)}")
+    if PLUGIN_TAB not in titles:
+        raise ValueError(f"ribbon.yaml: a tab titled {PLUGIN_TAB!r} is needed (plugins' toolbars go there)")
+    return tuple(tabs)
+
+
+def read_tabs_text(text):
+    """parse_tabs of ribbon.yaml's `text`."""
+    return parse_tabs(yaml.safe_load(text))
 
 
 def load_tabs(path=TABS_FILE):
     """The tabs of ribbon.yaml at `path` as ((title, groups), ...)."""
     with open(path, encoding="utf-8") as stream:
-        data = yaml.safe_load(stream)
-    return tuple((tab["title"], tuple(_group(g) for g in tab["groups"])) for tab in data["tabs"])
+        return read_tabs_text(stream.read())
 
 
-TABS = load_tabs()
+def _startup_tabs():
+    """(tabs, file read, why the profile's file was not read or None)."""
+    try:
+        path = user_tabs_file()
+    except (ImportError, RuntimeError):
+        path = None
+    if path and os.path.exists(path):
+        try:
+            return load_tabs(path), path, None
+        except (OSError, ValueError, yaml.YAMLError) as error:
+            try:
+                from qgis.core import Qgis, QgsMessageLog  # pylint: disable=import-outside-toplevel
+                QgsMessageLog.logMessage(
+                    f"{path} could not be read, the default ribbon is shown: {error}", "QGIS Studio Themes",
+                    Qgis.MessageLevel.Warning)
+            except (ImportError, RuntimeError):
+                pass
+            return load_tabs(), TABS_FILE, f"{error}"
+    return load_tabs(), TABS_FILE, None
+
+
+# The tabs shown, the file they came from and the profile file's error.
+TABS, TABS_SOURCE, TABS_ERROR = _startup_tabs()
 # The tab shown when none was chosen yet.
 DEFAULT_TAB = "Home"
 # Milliseconds before the tab shown is saved, after the last click.
@@ -259,9 +337,8 @@ ICON_FALLBACKS = {
     "MetaSearch": "ribbon/web.svg",
 }
 GENERIC_MENU_ICON = "ribbon/tools.svg"
-# The tab other toolbars (plugins') get a group on, and the toolbar whose
-# actions are the buttons right of the tabs.
-PLUGIN_TAB = "Plugins"
+# The toolbar whose actions are the buttons right of the tabs (other
+# toolbars, plugins', get a group on PLUGIN_TAB).
 CORNER_TOOLBAR = "mHelpToolBar"
 
 # Shorter labels than the actions' own (tooltips keep the full text), by
@@ -997,7 +1074,8 @@ class StudioRibbon(QObject):
         # The tab by its title (before 1.2's last tabs: by its index).
         titles = [title for title, _groups in TABS]
         tab = settings.value(TAB_SETTING, DEFAULT_TAB, type=str)
-        self._ribbon.show_tab(titles.index(tab if tab in titles else DEFAULT_TAB))
+        tab = tab if tab in titles else DEFAULT_TAB
+        self._ribbon.show_tab(titles.index(tab) if tab in titles else 0)
         self._ribbon.tabs.currentChanged.connect(self._tab_changed)
         self._ribbon.collapse.toggled.connect(lambda collapsed: QgsSettings().setValue(COLLAPSED_SETTING, collapsed))
         QTimer.singleShot(PREBUILD_DELAY, self._prebuild)
@@ -1189,7 +1267,7 @@ class StudioRibbon(QObject):
 
     @staticmethod
     def _tab_index(title):
-        return next(i for i, (name, _groups) in enumerate(TABS) if name == title)
+        return next((i for i, (name, _groups) in enumerate(TABS) if name == title), len(TABS) - 1)
 
     # ---- Building pages ---------------------------------------------------
 
