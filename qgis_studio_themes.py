@@ -605,6 +605,29 @@ def prune_masks(folder):
             shutil.rmtree(other, ignore_errors=True)
 
 
+# Test switch: every padding, margin and spacing in the stylesheet (but the
+# ribbon's rules) scaled by TIGHT_FACTOR. Set studio_themes/tightPadding=true.
+TIGHT_SETTING = "studio_themes/tightPadding"
+TIGHT_FACTOR = 0.6
+_TIGHT_PROP = re.compile(r"((?:padding|margin|spacing)(?:-(?:top|bottom|left|right))?\s*:\s*)([^;{}]+)")
+_TIGHT_PX = re.compile(r"(-?\d+(?:\.\d+)?)px")
+
+
+def tighten(style):
+    """`style` with padding/margin/spacing px values scaled down, except in
+    rules whose selector names the ribbon."""
+    def value(match):
+        return _TIGHT_PX.sub(lambda m: f"{round(float(m.group(1)) * TIGHT_FACTOR)}px", match.group(2))
+
+    out = []
+    for block in re.split(r"(?<=})", style):
+        head, brace, body = block.partition("{")
+        if brace and "studioRibbon" not in head:
+            body = _TIGHT_PROP.sub(lambda m: m.group(1) + value(m), body)
+        out.append(head + brace + body)
+    return "".join(out)
+
+
 def build_theme(folder, target, shared_stamp, active, extra_tokens=None,
                 icon_scale=studio_icons.SCALE, icon_style="mono", icon_outline=studio_icons.DEFAULT_OUTLINE):
     """Write the resolved stylesheet and all icons for one theme into
@@ -633,6 +656,8 @@ def build_theme(folder, target, shared_stamp, active, extra_tokens=None,
     written = set()
 
     style, unknown = render(SHARED_STYLE.read_text(encoding="utf-8"), tokens)
+    if tokens.get("@tight") == "1":
+        style = tighten(style)
     for template in WIDGET_GLYPHS.glob("*.svg"):
         svg, missing = render(template.read_text(encoding="utf-8"), tokens)
         unknown |= missing
@@ -2954,6 +2979,7 @@ class QgisStudioThemesPlugin:
         # Compact sizes: the menu and panel titles stay closer to the UI
         # font, panels keep QGIS's own icon size and icons are enlarged less.
         compact = self._compact
+        tight = QgsSettings().value(TIGHT_SETTING, False, type=bool)
         menu_size = base_size + (COMPACT_MENU_BAR_EXTRA_PT if compact else MENU_BAR_EXTRA_PT)
         self._extra_tokens = {
             "@menu_font_size": f"{menu_size:g}pt",
@@ -2973,10 +2999,11 @@ class QgisStudioThemesPlugin:
             # Toolbar name strips and handles, a rule per size (see
             # studio_toolbars).
             "@toolbar_name_rules": name_rules(),
+            "@tight": "1" if tight else "0",
         }
         self._stamp_base = (
             BUILD_FORMAT + build_stamp(shared_sources()) + f"|menu{menu_size:g}"
-            + ("|compact" if compact else "")
+            + ("|compact" if compact else "") + ("|tight" if tight else "")
         )
         self._shared_stamp = self._icons_stamp(self.icon_style())
         # Only the configured theme is built now; the others only need a
