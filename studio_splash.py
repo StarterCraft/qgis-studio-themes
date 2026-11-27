@@ -147,6 +147,31 @@ def _read():
     return tree, tree.getroot()
 
 
+def status_bar_names_set():
+    """The status bar widgets whose visibility the customization file sets,
+    or None when customization is off (nothing for QGIS to hide).
+
+    QGIS 4.2 (qgscustomization.cpp, loadApplicationStatusBarWidgets) records
+    a widget missing from the file as visible only if isVisible(), which is
+    false for every widget before the main window is first shown, and that
+    is when it runs: with customization on, every status bar widget the
+    file does not list is hidden at startup. The file this plugin writes
+    for the splash lists none (and QGIS reads the sections only with
+    version="1")."""
+    try:
+        _tree, root = _read()
+    except (OSError, ET.ParseError):
+        return None
+    if root is None or root.get("enabled") != "true":
+        return None
+    if root.get("version") != "1":
+        return set()
+    section = root.find("StatusBarWidgets")
+    if section is None:
+        return set()
+    return {item.get("name") for item in section.iter() if item is not section and item.get("name")}
+
+
 def _write_image(folder, tokens, theme_name, theme_folder):
     """splash.png for the theme: the user's own `<theme folder>.png` beside
     it (e.g. leaf.png) copied, else drawn. Skipped when splash.png already

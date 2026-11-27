@@ -2854,6 +2854,7 @@ class QgisStudioThemesPlugin:
         # QGIS has finished starting (every toolbar, plugins' too, is in
         # place): the ribbon is only built then.
         self._ready = False
+        self._status_bar_shown = None
         self._settings_action = None
         self._settings_dialog = None
         # Plugins > QGIS Studio Themes > Ribbon Editor… (studio_ribbon_editor).
@@ -2935,6 +2936,12 @@ class QgisStudioThemesPlugin:
         self.iface.initializationCompleted.connect(self._initialized)
         # Enabled in a running QGIS: no initializationCompleted to come.
         self._ready = self.iface.mainWindow().isVisible()
+        if not self._ready:
+            # Before QGIS applies the interface customization (see
+            # _restore_status_bar).
+            self._status_bar_shown = {
+                widget.objectName() for widget in self._status_bar_widgets() if not widget.isHidden()
+            }
         self._connected = True
         self._settings_action = QAction(
             QgsApplication.getThemeIcon("mActionOptions.svg"), "Settings…", self.iface.mainWindow()
@@ -3417,7 +3424,32 @@ class QgisStudioThemesPlugin:
 
     def _initialized(self):
         self._ready = True
+        self._restore_status_bar()
         self._apply_labels()
+
+    def _status_bar_widgets(self):
+        """QGIS's status bar widgets, as the interface customization names
+        them: the named direct children of QgsStatusBar."""
+        bar = self.iface.statusBarIface()
+        if bar is None:
+            return []
+        return [w for w in bar.findChildren(QWidget, options=Qt.FindChildOption.FindDirectChildrenOnly)
+                if w.objectName()]
+
+    def _restore_status_bar(self):
+        """With interface customization on (the theme splash turns it on),
+        QGIS 4.2 hides at startup every status bar widget its file does not
+        list (studio_splash.status_bar_names_set): coordinates, scale,
+        CRS, messages... all gone. Those shown before QGIS applied it are
+        shown again; widgets the file does list keep what it says."""
+        shown, self._status_bar_shown = self._status_bar_shown, None
+        listed = studio_splash.status_bar_names_set()
+        if not shown or listed is None:
+            return
+        for widget in self._status_bar_widgets():
+            name = widget.objectName()
+            if name in shown and name not in listed and widget.isHidden():
+                widget.show()
 
     def studio_shown(self):
         """Whether a Studio theme is shown (the toolbar names with it)."""
