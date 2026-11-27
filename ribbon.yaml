@@ -34,6 +34,11 @@
 # labels: (optional, after tabs:) texts of one's own for buttons, wherever they are:
 #   labels:
 #     mActionOpenProject: "Open…"       # {title}: the text it would have, {id}: its objectName
+# icons: (optional) icons of one's own for buttons, wherever they are:
+#   icons:
+#     mActionExit: "action:mActionCloseProject"              # another command's icon
+#     mActionOpenProject: ":/images/themes/default/mActionFileOpen.svg"   # QGIS's theme
+#     myPluginRun: "C:/icons/run.svg"                        # a file, or a Qt resource ":/..."
 
 tabs:
   - title: "Project"

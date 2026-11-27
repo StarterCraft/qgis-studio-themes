@@ -1492,5 +1492,61 @@
         <source>A text of your own for this button, wherever it is on the ribbon (saved under labels:). Empty: its usual text. {title} in it is the usual text, {id} its objectName. Tick Large in the tree for a large button.</source>
         <translation>Свой текст этой кнопки — везде, где она есть на ленте (хранится в разделе labels:). Пусто — обычный текст. {title} в нём — обычный текст, {id} — её objectName. Отметка «Крупная» в дереве — крупная кнопка.</translation>
     </message>
+    <message>
+        <source>Choose an Icon</source>
+        <translation>Выбор значка</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Все</translation>
+    </message>
+    <message>
+        <source>QGIS theme</source>
+        <translation>Тема QGIS</translation>
+    </message>
+    <message>
+        <source>Commands</source>
+        <translation>Команды</translation>
+    </message>
+    <message>
+        <source>Plugins</source>
+        <translation>Модули</translation>
+    </message>
+    <message>
+        <source>Search icons…</source>
+        <translation>Поиск значков…</translation>
+    </message>
+    <message>
+        <source>From File…</source>
+        <translation>Из файла…</translation>
+    </message>
+    <message>
+        <source>Choose</source>
+        <translation>Выбрать</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Отмена</translation>
+    </message>
+    <message>
+        <source>Icons (*.svg *.png)</source>
+        <translation>Значки (*.svg *.png)</translation>
+    </message>
+    <message>
+        <source>Choose…</source>
+        <translation>Выбрать…</translation>
+    </message>
+    <message>
+        <source>Usual Icon</source>
+        <translation>Обычный значок</translation>
+    </message>
+    <message>
+        <source>Icon</source>
+        <translation>Значок</translation>
+    </message>
+    <message>
+        <source>(its usual icon)</source>
+        <translation>(обычный значок)</translation>
+    </message>
 </context>
 </TS>

@@ -357,7 +357,47 @@ def parse_tabs(data):
     if PLUGIN_TAB not in titles:
         raise ValueError(f"ribbon.yaml: a tab titled {PLUGIN_TAB!r} is needed (plugins' toolbars go there)")
     parse_labels(data)
+    parse_icons(data)
     return tuple(tabs)
+
+
+def parse_icons(data):
+    """ribbon.yaml's icons: {objectName: icon} — icons of one's own for
+    buttons, wherever they are (see icon_from_spec)."""
+    icons = data.get("icons") or {}
+    if not isinstance(icons, dict) or not all(
+            isinstance(k, str) and k and isinstance(v, str) and v for k, v in icons.items()):
+        raise ValueError('ribbon.yaml: icons: expected objectName: "icon" pairs')
+    return dict(icons)
+
+
+# An icon in ribbon.yaml: another command's ("action:<objectName>"), one of
+# QGIS's theme (":/images/themes/default/<name>", the Studio theme's own
+# drawing of it when it has one), any other Qt resource (":/plugins/...")
+# or a file (SVG or PNG).
+ACTION_ICON = "action:"
+THEME_ICONS = ":/images/themes/default/"
+
+
+def icon_from_spec(spec, find, themed=None):
+    """The QIcon `spec` names, or None. `find(objectName)` finds a command,
+    `themed(name)` gives the Studio theme's icon for a QGIS icon name."""
+    if not spec:
+        return None
+    if spec.startswith(ACTION_ICON):
+        action = find(spec[len(ACTION_ICON):])
+        return QIcon(action.icon()) if action is not None and not action.icon().isNull() else None
+    if spec.startswith(THEME_ICONS):
+        name = spec[len(THEME_ICONS):]
+        icon = themed(name) if themed is not None else None
+        if icon is None:
+            from qgis.core import QgsApplication  # pylint: disable=import-outside-toplevel
+            icon = QgsApplication.getThemeIcon("/" + name)
+        return icon if icon is not None and not icon.isNull() else None
+    if spec.startswith(":/") or os.path.exists(spec):
+        icon = QIcon(spec)
+        return icon if not icon.isNull() else None
+    return None
 
 
 def parse_labels(data):
@@ -385,7 +425,7 @@ def load_tabs(path=TABS_FILE):
 def _startup_tabs():
     """(tabs, file read, why the profile's file was not read or None);
     LABEL_OVERRIDES from the same file."""
-    global LABEL_OVERRIDES  # pylint: disable=global-statement
+    global LABEL_OVERRIDES, ICON_OVERRIDES  # pylint: disable=global-statement
     try:
         path = user_tabs_file()
     except (ImportError, RuntimeError):
@@ -394,7 +434,9 @@ def _startup_tabs():
         try:
             tabs = load_tabs(path)
             with open(path, encoding="utf-8") as stream:
-                LABEL_OVERRIDES = parse_labels(yaml.safe_load(stream))
+                data = yaml.safe_load(stream)
+            LABEL_OVERRIDES = parse_labels(data)
+            ICON_OVERRIDES = parse_icons(data)
             return tabs, path, None
         except (OSError, ValueError, yaml.YAMLError) as error:
             try:
@@ -405,12 +447,15 @@ def _startup_tabs():
             except (ImportError, RuntimeError):
                 pass
             LABEL_OVERRIDES = {}
+            ICON_OVERRIDES = {}
             return load_tabs(), TABS_FILE, f"{error}"
     return load_tabs(), TABS_FILE, None
 
 
 # Buttons' texts of one's own (ribbon.yaml labels:), by objectName.
 LABEL_OVERRIDES = {}
+# Buttons' icons of one's own (ribbon.yaml icons:), by objectName.
+ICON_OVERRIDES = {}
 
 
 # The tabs shown, the file they came from and the profile file's error.
@@ -646,7 +691,20 @@ class _Button(QToolButton):
             self.setText(self._label)
         if self._placeholder is not None and self.icon().isNull():
             self.setIcon(self._placeholder)
+        if getattr(self, "_own_icon", None) is not None and self.icon().cacheKey() != self._own_key:
+            self.setIcon(self._own_icon)
+            self._gap_icon()
+            self._own_key = self.icon().cacheKey()
+            return
         self._gap_icon()
+
+    def set_own_icon(self, icon):
+        """An icon of the ribbon's own (ribbon.yaml icons:), kept whatever
+        icon its action takes later."""
+        self._own_icon = icon
+        self.setIcon(icon)
+        self._gap_icon()
+        self._own_key = self.icon().cacheKey()
 
     def _gap_icon(self):
         """Keep ICON_GAP between icon and label (see _GapEngine)."""
@@ -1678,6 +1736,16 @@ class StudioRibbon(QObject):
         return short
 
     def _widget(self, parent, action, toolbar, kind):
+        """_make_widget, with the icon ribbon.yaml's icons: give it."""
+        widget = self._make_widget(parent, action, toolbar, kind)
+        spec = ICON_OVERRIDES.get(_key(action)) if isinstance(widget, _Button) else None
+        if spec:
+            icon = icon_from_spec(spec, self._find, self._icons.themed_icon if self._icons is not None else None)
+            if icon is not None:
+                widget.set_own_icon(icon)
+        return widget
+
+    def _make_widget(self, parent, action, toolbar, kind):
         """The ribbon's widget for an action: a button for it, a clone of
         QGIS's tool button, or the toolbar's widget, borrowed; None for
         widgets left out."""

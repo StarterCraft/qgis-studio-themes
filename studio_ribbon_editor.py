@@ -31,10 +31,12 @@ import os
 
 import yaml
 from qgis.PyQt import sip
-from qgis.PyQt.QtCore import QItemSelectionModel, QMimeData, QRegularExpression, Qt, pyqtSignal
-from qgis.PyQt.QtGui import QBrush, QColor, QFont, QFontDatabase, QIcon, QPalette, QSyntaxHighlighter, QTextCharFormat, QTextCursor
+from qgis.PyQt.QtCore import (
+    QDir, QDirIterator, QItemSelectionModel, QMimeData, QRegularExpression, QSize, Qt, pyqtSignal,
+)
+from qgis.PyQt.QtGui import QBrush, QColor, QFont, QFontDatabase, QIcon, QPalette, QPixmap, QSyntaxHighlighter, QTextCharFormat, QTextCursor
 from qgis.PyQt.QtWidgets import (
-    QAbstractItemView, QAction, QApplication, QCheckBox, QComboBox, QDialog, QFormLayout, QGroupBox, QHBoxLayout, QHeaderView, QLabel,
+    QAbstractItemView, QAction, QApplication, QCheckBox, QComboBox, QDialog, QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QHeaderView, QLabel,
     QLineEdit, QListWidget, QListWidgetItem, QMenu, QMessageBox, QPlainTextEdit, QPushButton, QSplitter, QTabWidget, QToolBar,
     QTreeWidget, QTreeWidgetItem, QTreeWidgetItemIterator, QVBoxLayout, QWidget, QWidgetAction,
 )
@@ -260,10 +262,11 @@ def dump(data, head=None):
                 lines.append("        rows:")
                 for row in group["rows"]:
                     _row(lines, row)
-    if data.get("labels"):
-        lines.append("")
-        lines.append("labels:")
-        lines += [f"  {_quoted(k)}: {_quoted(v)}" for k, v in data["labels"].items()]
+    for section in ("labels", "icons"):
+        if data.get(section):
+            lines.append("")
+            lines.append(f"{section}:")
+            lines += [f"  {_quoted(k)}: {_quoted(v)}" for k, v in data[section].items()]
     return "\n".join(lines) + "\n"
 
 
@@ -794,6 +797,112 @@ class _RibbonTree(QTreeWidget):
             self.changed.emit()
 
 
+class IconPicker(QDialog):
+    """Choose an icon from those this QGIS session has: QGIS's theme, the
+    commands' own (each window command's icon), Qt resources plugins load
+    (":/plugins/..."), or a file. `spec` is the choice, as ribbon.yaml's
+    icons: has it (studio_ribbon.icon_from_spec)."""
+
+    SETS = (("all", "All"), ("theme", "QGIS theme"), ("commands", "Commands"), ("plugins", "Plugins"))
+
+    def __init__(self, catalog, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(_t("Choose an Icon"))
+        self.spec = None
+        self._search = QLineEdit()
+        self._search.setPlaceholderText(_t("Search icons…"))
+        self._search.setClearButtonEnabled(True)
+        self._set = QComboBox()
+        for value, text in self.SETS:
+            self._set.addItem(_t(text), value)
+        self._list = QListWidget()
+        self._list.setViewMode(QListWidget.ViewMode.IconMode)
+        self._list.setIconSize(QSize(32, 32))
+        self._list.setGridSize(QSize(96, 72))
+        self._list.setResizeMode(QListWidget.ResizeMode.Adjust)
+        self._list.setMovement(QListWidget.Movement.Static)
+        self._list.setUniformItemSizes(True)
+        self._list.setWordWrap(True)
+        self._list.itemDoubleClicked.connect(lambda *_args: self._choose())
+        self._fill(catalog)
+        self._search.textChanged.connect(self._filter)
+        self._set.currentIndexChanged.connect(self._filter)
+        file_button = QPushButton(_t("From File…"))
+        file_button.clicked.connect(self._from_file)
+        choose = QPushButton(_t("Choose"))
+        choose.setDefault(True)
+        choose.clicked.connect(self._choose)
+        cancel = QPushButton(_t("Cancel"))
+        cancel.clicked.connect(self.reject)
+        top = QHBoxLayout()
+        top.addWidget(self._search, 1)
+        top.addWidget(self._set)
+        bottom = QHBoxLayout()
+        bottom.addWidget(file_button)
+        bottom.addStretch(1)
+        bottom.addWidget(choose)
+        bottom.addWidget(cancel)
+        layout = QVBoxLayout(self)
+        layout.addLayout(top)
+        layout.addWidget(self._list, 1)
+        layout.addLayout(bottom)
+        screen = (parent.screen() if parent is not None else None) or QApplication.primaryScreen()
+        free = screen.availableGeometry()
+        self.resize(min(820, int(free.width() * 0.8)), min(600, int(free.height() * 0.75)))
+
+    def _add(self, kind, spec, icon, text, tip):
+        if icon is None or icon.isNull():
+            return
+        item = QListWidgetItem(icon, text)
+        item.setData(ROLE, spec)
+        item.setData(ROLE + 1, kind)
+        item.setToolTip(tip)
+        self._list.addItem(item)
+
+    def _fill(self, catalog):
+        for path in _resources(studio_ribbon.THEME_ICONS.rstrip("/")):
+            name = path[len(studio_ribbon.THEME_ICONS):]
+            self._add("theme", path, QIcon(path), os.path.splitext(os.path.basename(name))[0], name)
+        for name in sorted(catalog.actions, key=lambda n: catalog.label(n)[0].lower()):
+            label = catalog.label(name)[0]
+            self._add("commands", studio_ribbon.ACTION_ICON + name, catalog.icon(name), label, f"{label}  ({name})")
+        for path in _resources(":/plugins"):
+            self._add("plugins", path, QIcon(path), os.path.splitext(os.path.basename(path))[0], path)
+
+    def _filter(self, *_args):
+        words = self._search.text().strip().lower().split()
+        chosen = self._set.currentData()
+        for row in range(self._list.count()):
+            item = self._list.item(row)
+            text = f"{item.text()} {item.toolTip()}".lower()
+            item.setHidden(not ((chosen == "all" or item.data(ROLE + 1) == chosen)
+                                and all(w in text for w in words)))
+
+    def _choose(self):
+        item = self._list.currentItem()
+        if item is None or item.isHidden():
+            return
+        self.spec = item.data(ROLE)
+        self.accept()
+
+    def _from_file(self):
+        path, _filter = QFileDialog.getOpenFileName(
+            self, _t("Choose an Icon"), "", _t("Icons (*.svg *.png)"))
+        if path:
+            self.spec = path
+            self.accept()
+
+
+def _resources(root):
+    """The SVG and PNG files under Qt resource folder `root`, sorted."""
+    found = []
+    iterator = QDirIterator(root, ["*.svg", "*.png"], QDir.Filter.Files,
+                            QDirIterator.IteratorFlag.Subdirectories)
+    while iterator.hasNext():
+        found.append(iterator.next())
+    return sorted(found, key=str.lower)
+
+
 class RibbonEditorDialog(QDialog):
     """See the module docstring."""
 
@@ -817,6 +926,8 @@ class RibbonEditorDialog(QDialog):
         self._syncing = False
         # Buttons' texts of one's own (ribbon.yaml labels:), by objectName.
         self._overrides = {}
+        # Buttons' icons of one's own (ribbon.yaml icons:), by objectName.
+        self._icon_overrides = {}
         self._dim = self.palette().color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text)
 
         self._views = QTabWidget()
@@ -986,6 +1097,21 @@ class RibbonEditorDialog(QDialog):
         self._titled = QCheckBox(_t("With the menu's name above them (not clickable)"))
         self._titled.toggled.connect(self._inline_toggled)
         form.addRow("", self._titled)
+        self._icon_row = QWidget()
+        icon_layout = QHBoxLayout(self._icon_row)
+        icon_layout.setContentsMargins(0, 0, 0, 0)
+        self._icon_preview = QLabel()
+        self._icon_preview.setFixedSize(28, 28)
+        choose_icon = QPushButton(_t("Choose…"))
+        choose_icon.clicked.connect(self._choose_icon)
+        self._reset_icon = QPushButton(_t("Usual Icon"))
+        self._reset_icon.clicked.connect(lambda: self._set_icon_override(self._current_key(), None))
+        self._icon_note = QLabel()
+        icon_layout.addWidget(self._icon_preview)
+        icon_layout.addWidget(choose_icon)
+        icon_layout.addWidget(self._reset_icon)
+        icon_layout.addWidget(self._icon_note, 1)
+        form.addRow(_t("Icon"), self._icon_row)
         form.addRow(_t("Shown as"), self._shown_as)
         form.addRow(_t("Buttons"), self._layout)
         form.addRow(_t("Large buttons"), self._large)
@@ -1242,7 +1368,7 @@ class RibbonEditorDialog(QDialog):
             item.setText(0, self._button_text(name))
             item.setText(1, f"{name} · {origin}")
             item.setToolTip(0, own or name)
-            icon = catalog.icon(name)
+            icon = self._button_icon(name)
             if icon is not None and not icon.isNull():
                 item.setIcon(0, icon)
             flags |= Qt.ItemFlag.ItemIsUserCheckable
@@ -1338,7 +1464,7 @@ class RibbonEditorDialog(QDialog):
         item.setText(1, f"{action or '—'} · {_t('dropdown')}")
         item.setToolTip(0, _t("A dropdown: its command on its face, its list behind the arrow") if action
                         else _t("A dropdown: a button opening its list"))
-        icon = self._catalog.icon(action) if action else None
+        icon = self._button_icon(entry_key(entry)) if entry_key(entry) else None
         item.setIcon(0, icon if icon is not None else QIcon())
 
     def _label_preview(self, entry):
@@ -1377,6 +1503,7 @@ class RibbonEditorDialog(QDialog):
     def _fill_data(self, data):
         """Show ribbon.yaml's parsed `data`: its tabs and its labels:."""
         self._overrides = dict(data.get("labels") or {})
+        self._icon_overrides = dict(data.get("icons") or {})
         self._fill_tree(tabs_from_data(data))
 
     def _fill_tree(self, tabs):
@@ -1443,6 +1570,8 @@ class RibbonEditorDialog(QDialog):
         data = data_from_tabs(self._tabs_of_tree())
         if self._overrides:
             data["labels"] = dict(self._overrides)
+        if self._icon_overrides:
+            data["icons"] = dict(self._icon_overrides)
         return dump(data)
 
     def _all_groups(self):
@@ -1624,6 +1753,7 @@ class RibbonEditorDialog(QDialog):
         self._command.setItemText(0, _t("(none)") if label else _t("(none: the button only opens its list)"))
         for widget, shown in ((self._title, depth in (TAB, GROUP) or dropdown or label or button),
                               (self._shown_as, depth in (TAB, GROUP)), (self._command, dropdown or label),
+                              (self._icon_row, button or (dropdown and bool(entry_key(item.data(0, ROLE))))),
                               (self._inline, depth == ITEM and self._is_menu_item(item)),
                               (self._titled, depth == ITEM and self._is_menu_item(item)),
                               (self._layout, depth == GROUP), (self._large, depth == GROUP)):
@@ -1661,6 +1791,8 @@ class RibbonEditorDialog(QDialog):
             self._info.setText("\n".join(info))
             return
         entry = item.data(0, ROLE)
+        if button or dropdown:
+            self._show_icon(entry_key(entry))
         if button:
             name = entry["name"]
             self._title.setText(self._overrides.get(name, ""))
@@ -1745,6 +1877,60 @@ class RibbonEditorDialog(QDialog):
             self._change_label(item, text=text or None)
         elif item is not None and _depth(item) == ENTRY and item.data(0, ROLE)["kind"] == CMD:
             self._set_override(item.data(0, ROLE)["name"], text)
+
+    def _button_icon(self, name):
+        """A button's icon as the ribbon will show it (its own, if any)."""
+        spec = self._icon_overrides.get(name)
+        if spec:
+            icon = studio_ribbon.icon_from_spec(spec, self._catalog.action)
+            if icon is not None:
+                return icon
+        return self._catalog.icon(name)
+
+    def _current_key(self):
+        item = self._tree.currentItem()
+        if item is None or _depth(item) != ENTRY:
+            return None
+        return entry_key(item.data(0, ROLE))
+
+    def _show_icon(self, key):
+        if not key:
+            return
+        icon = self._button_icon(key)
+        self._icon_preview.setPixmap(icon.pixmap(24, 24) if icon is not None and not icon.isNull() else QPixmap())
+        spec = self._icon_overrides.get(key)
+        self._reset_icon.setEnabled(bool(spec))
+        self._icon_note.setText(spec or _t("(its usual icon)"))
+        self._icon_note.setToolTip(spec or "")
+
+    def _choose_icon(self):
+        key = self._current_key()
+        if not key:
+            return
+        picker = IconPicker(self._catalog, self)
+        if picker.exec() and picker.spec:
+            self._set_icon_override(key, picker.spec)
+
+    def _set_icon_override(self, key, spec):
+        """Give button `key` an icon of its own (None: its usual one); every
+        row of it in the tree follows."""
+        if not key or self._icon_overrides.get(key) == spec:
+            return
+        if spec:
+            self._icon_overrides[key] = spec
+        else:
+            self._icon_overrides.pop(key, None)
+        self._syncing = True
+        iterator = QTreeWidgetItemIterator(self._tree)
+        while iterator.value() is not None:
+            item = iterator.value()
+            iterator += 1
+            entry = item.data(0, ROLE)
+            if entry and entry.get("kind") in (CMD, DROP) and _depth(item) == ENTRY and entry_key(entry) == key:
+                icon = self._button_icon(key)
+                item.setIcon(0, icon if icon is not None else QIcon())
+        self._syncing = False
+        self._tree_changed()
 
     def _button_text(self, name):
         """A button's text as the ribbon will show it (its own text, if any)."""
