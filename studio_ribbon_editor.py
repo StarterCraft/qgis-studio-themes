@@ -1016,8 +1016,8 @@ class RibbonEditorDialog(QDialog):
                 (tools, _t("Remove"), "Delete", self._tree.remove_selected),
                 (moves, "▲", _t("Move up"), lambda: self._shift(-1)),
                 (moves, "▼", _t("Move down"), lambda: self._shift(1)),
-                (moves, _t("Add Caption"), "", lambda: self._add_label(CAPTION)),
-                (moves, _t("Add Note"), "", lambda: self._add_label(NOTE)),
+                #(moves, _t("Add Caption"), "", lambda: self._add_label(CAPTION)),
+                #(moves, _t("Add Note"), "", lambda: self._add_label(NOTE)),
                 (moves, _t("Expand All"), "", self._tree.expandAll),
                 (moves, _t("Collapse All"), "", self._tree.collapseAll)):
             button = QPushButton(text)
