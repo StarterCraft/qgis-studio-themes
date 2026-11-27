@@ -45,6 +45,8 @@ from .studio_i18n import tr
 
 MIME = "application/x-studio-ribbon-entries"
 ROLE = Qt.ItemDataRole.UserRole
+# Palette rows shown for information only (commands without objectName).
+INFO_ROLE = Qt.ItemDataRole.UserRole + 1
 # Tree levels: a tab, a group, an entry (a button or a source of buttons),
 # an item of a dropdown's list.
 TAB, GROUP, ENTRY, ITEM = 0, 1, 2, 3
@@ -313,6 +315,8 @@ class Catalog:
         # None) or a menu's (name, title, children).
         self.menus = []
         self.menu_titles = {}
+        # {menu objectName: [(text, icon)]} of commands without objectName.
+        self.unnamed = {}
         seen = set()
         menu_bar = window.menuBar()
         for action in menu_bar.actions() if menu_bar is not None else ():
@@ -336,6 +340,10 @@ class Catalog:
             elif action.objectName():
                 self.actions.setdefault(action.objectName(), action)
                 children.append((action.objectName(), None))
+            elif studio_ribbon.clean(action.text()):
+                # No objectName (many plugins' commands): ribbon.yaml cannot
+                # name it; the menu's "everything else" shows it.
+                self.unnamed.setdefault(name, []).append((studio_ribbon.clean(action.text()), action.icon()))
         return name, self.menu_titles[name], children
 
     def action(self, name):
@@ -1034,6 +1042,12 @@ class RibbonEditorDialog(QDialog):
                                    catalog.icon(child[0]), own)
             else:
                 self._palette_menu(node, child)
+        for text, icon in catalog.unnamed.get(name, ()):
+            item = self._palette_item(node, text, _t("(no objectName)"), None, icon,
+                                      _t("This command has no objectName, so the ribbon cannot place it on "
+                                         "its own: drag the menu's “everything else” to show it."))
+            item.setForeground(0, QBrush(self._dim))
+            item.setData(0, INFO_ROLE, True)
 
     def _usage(self):
         """{entry key: [where]} of what the tree places, and the names it
@@ -1140,7 +1154,7 @@ class RibbonEditorDialog(QDialog):
             shown_child = False
             for child in _children(item):
                 shown_child = visit(child) or shown_child
-            shown = (own and entry is not None) or shown_child
+            shown = (own and (entry is not None or bool(item.data(0, INFO_ROLE)))) or shown_child
             item.setHidden(not shown)
             if words and shown_child:
                 item.setExpanded(True)

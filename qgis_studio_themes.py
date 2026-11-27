@@ -2920,9 +2920,11 @@ class QgisStudioThemesPlugin:
         self._settings_action = QAction(
             QgsApplication.getThemeIcon("mActionOptions.svg"), "Settings…", self.iface.mainWindow()
         )
+        self._settings_action.setObjectName("studioThemesSettings")
         self._settings_action.triggered.connect(self._show_settings)
         self.iface.addPluginToMenu(MENU_NAME, self._settings_action)
         self._ribbon_editor_action = QAction("Ribbon Editor…", self.iface.mainWindow())
+        self._ribbon_editor_action.setObjectName("studioThemesRibbonEditor")
         self._ribbon_editor_action.triggered.connect(self.show_ribbon_editor)
         self.iface.addPluginToMenu(MENU_NAME, self._ribbon_editor_action)
         self._hook_sizes()

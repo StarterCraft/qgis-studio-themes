@@ -1480,5 +1480,13 @@
         <source>Shown: {text}</source>
         <translation>Показывается: {text}</translation>
     </message>
+    <message>
+        <source>(no objectName)</source>
+        <translation>(нет objectName)</translation>
+    </message>
+    <message>
+        <source>This command has no objectName, so the ribbon cannot place it on its own: drag the menu's “everything else” to show it.</source>
+        <translation>У этой команды нет objectName, поэтому лента не может поставить её отдельно: перетащите «всё остальное» этого меню, чтобы показать её.</translation>
+    </message>
 </context>
 </TS>

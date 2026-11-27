@@ -1480,5 +1480,13 @@
         <source>Shown: {text}</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>(no objectName)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This command has no objectName, so the ribbon cannot place it on its own: drag the menu's “everything else” to show it.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 </TS>
