@@ -736,15 +736,15 @@
     </message>
     <message>
         <source>Export Image</source>
-        <translation>Растр…</translation>
+        <translation>Растр</translation>
     </message>
     <message>
         <source>Export PDF</source>
-        <translation>PDF…</translation>
+        <translation>PDF</translation>
     </message>
     <message>
         <source>Export DXF</source>
-        <translation>DXF…</translation>
+        <translation>DXF</translation>
     </message>
     <message>
         <source>Import DWG/DXF</source>

@@ -39,6 +39,9 @@ Previewed to the user but not requested for building:
 - Visual polish list: Monochrome badges as solid discs, eye variants with standard badges, one hue for media controls, lighter outline-only lines on dark themes, white paper on dark themes, one data colour for charts, tonal Layers stack. Preview script: `preview.py`.
 Ask the user before building any of them.
 
+### Ellipsis rule (27.11.2026, user's rule, not yet in the changelog)
+"…" promises nothing happens until the user answers a dialog and confirms. One rule for the whole plugin, at `ELLIPSIS` in `studio_ribbon.py`: whether a command asks is the command's (QGIS's text for it ends in "…", `asks`), never the label's, so labels carry none (`clean`, `label_for`, ribbon.yaml `labels:` and the editor's Text field drop it, `without_ellipsis`). Ribbon buttons show none; dropdown list items and menus show it when the command asks (`menu_text`; QGIS's own items keep QGIS's text; the editor's list rows too); dialog buttons end in it only when they open another asking window (Edit Ribbon…, Choose…, From File…). Russian ribbon labels Растр/PDF/DXF lost theirs. Not checked in a running QGIS.
+
 ## 4. Key facts (verified)
 - **Icon pipeline:** glyph masks per (size, line width, scale) rendered to atlases in the profile, composed per theme (`compose_atlas`); `SharpIconEngine` serves exact-size pixmaps. Mask cache is keyed by a hash of `studio_icons.py` (editing it forces a redraw).
 - **Swapper identification:** by `QIcon.cacheKey()` first, else by serialized data vs. a fingerprint table of built-in icons (cached on disk per QGIS build: `.studio-icon-digests.json` in the user themes folder). Widgets are scanned once (on ChildPolished / focus / stacked page change); later changes need a hook.

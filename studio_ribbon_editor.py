@@ -1418,7 +1418,7 @@ class RibbonEditorDialog(QDialog):
                 found = catalog.found(menu)
             else:
                 _label, own = catalog.label(name)
-                item.setText(0, self._button_text(name))
+                item.setText(0, self._button_text(name, listed=True))
                 kind = _t("submenu") if name in catalog.menu_titles else _t("command")
                 item.setText(1, f"{name} · {kind}")
                 item.setToolTip(0, own or name)
@@ -1919,14 +1919,20 @@ class RibbonEditorDialog(QDialog):
         self._syncing = False
         self._tree_changed()
 
-    def _button_text(self, name):
-        """A button's text as the ribbon will show it (its own text, if any)."""
+    def _button_text(self, name, listed=False):
+        """A button's text as the ribbon will show it (its own text, if any);
+        `listed`: as an item of a dropdown's list, with an ellipsis when the
+        command asks first (studio_ribbon.ELLIPSIS)."""
         usual = self._catalog.label(name)[0]
-        return studio_ribbon.label_text(self._overrides[name], usual, name) if name in self._overrides else usual
+        text = studio_ribbon.label_text(self._overrides[name], usual, name) if name in self._overrides else usual
+        text = studio_ribbon.without_ellipsis(text)
+        return studio_ribbon.menu_text(text, self._catalog.action(name)) if listed else text
 
     def _set_override(self, name, text):
         """Give button `name` a text of its own (empty: its usual one); every
         row of it in the tree follows."""
+        # No ellipsis of its own: the command decides (studio_ribbon.ELLIPSIS).
+        text = studio_ribbon.without_ellipsis(text)
         if text.strip():
             self._overrides[name] = text
         elif name in self._overrides:
@@ -1938,7 +1944,7 @@ class RibbonEditorDialog(QDialog):
         while iterator.value() is not None:
             entry = iterator.value().data(0, ROLE)
             if entry and entry.get("kind") in (CMD, LISTED) and entry.get("name") == name:
-                iterator.value().setText(0, self._button_text(name))
+                iterator.value().setText(0, self._button_text(name, listed=entry["kind"] == LISTED))
             iterator += 1
         self._syncing = False
         self._tree_changed(typing=True)

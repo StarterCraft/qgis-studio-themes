@@ -35,7 +35,7 @@
 #
 # labels: (optional, after tabs:) texts of one's own for buttons, wherever they are:
 #   labels:
-#     mActionOpenProject: "Open…"       # {title}: the text it would have, {id}: its objectName
+#     mActionOpenProject: "Open"        # no "…": a list adds it itself; {title}: the text it would have, {id}: its objectName
 # icons: (optional) icons of one's own for buttons, wherever they are:
 #   icons:
 #     mActionExit: "action:mActionCloseProject"              # another command's icon

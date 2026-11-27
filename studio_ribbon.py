@@ -615,11 +615,48 @@ def label_for(key, own, override=True):
     """The label of the command named `key` (see _key): its short one
     (LABELS_BY_NAME) in QGIS's language (studio_i18n), else `own`, its own
     text, which QGIS translates; or the text ribbon.yaml's labels: give it
-    ({title} in it: that label, {id}: `key`)."""
+    ({title} in it: that label, {id}: `key`). Never with an ellipsis
+    (see ELLIPSIS: menu_text adds it where it belongs)."""
     label = translated_label(LABELS_BY_NAME.get(key)) or own
     if override and key in LABEL_OVERRIDES:
-        return label_text(LABEL_OVERRIDES[key], label, key)
-    return label
+        label = label_text(LABEL_OVERRIDES[key], label, key)
+    return without_ellipsis(label)
+
+
+# The ellipsis rule, for the whole plugin. "…" after a command's text
+# promises that nothing happens until the user answers a dialog and
+# confirms, so such a command can be clicked just to look. Whether a
+# command asks first is the command's own business, never the label's:
+# QGIS's text for it ends in "…" (`asks`). So labels here carry no ellipsis
+# of their own (clean, label_for and ribbon.yaml's labels: drop it), and:
+# - ribbon buttons show none, as ribbons do (nearly every large button
+#   opens a window, so it would say nothing and only take room);
+# - items in lists and menus (dropdowns, the plugin's own menus) show it
+#   when the command asks (menu_text), like QGIS's menus around them;
+# - buttons in the plugin's dialogs end in it when they open another
+#   window that asks (Edit Ribbon…, Choose…, From File…), not when they
+#   act at once (Save, Revert, Open Folder) or answer the dialog (Choose).
+ELLIPSIS = "…"
+_TRAILING_ELLIPSIS = re.compile(r"\s*(…|\.\.\.)\s*$")
+
+
+def without_ellipsis(text):
+    """`text` without an ellipsis at its end."""
+    return _TRAILING_ELLIPSIS.sub("", text or "")
+
+
+def asks(action):
+    """Whether `action` asks before it acts: QGIS's text for it ends in an
+    ellipsis (a menu's own action never does: a list opens, nothing runs)."""
+    text = re.sub(r"<[^>]+>", "", action.text() or "") if action is not None else ""
+    return menu_of(action) is None and _TRAILING_ELLIPSIS.search(text) is not None
+
+
+def menu_text(text, action):
+    """`text` (a label) as the item of a list or menu for `action`: with an
+    ellipsis exactly when the command asks first (ELLIPSIS)."""
+    text = without_ellipsis(text)
+    return text + ELLIPSIS if text and asks(action) else text
 
 
 def clean(text):
@@ -1958,10 +1995,11 @@ class StudioRibbon(QObject):
     def _renamed_action(action, name, menu):
         """`action` itself, or, when ribbon.yaml's labels: give `name` a
         text of its own, a stand-in with that text (QGIS's own menus keep
-        theirs): a click runs `action`, a submenu stays one."""
+        theirs): a click runs `action`, a submenu stays one; with an
+        ellipsis when `action` asks first, whatever the text (ELLIPSIS)."""
         if name not in LABEL_OVERRIDES:
             return action
-        text = label_text(LABEL_OVERRIDES[name], clean(action.text()), name)
+        text = menu_text(label_text(LABEL_OVERRIDES[name], clean(action.text()), name), action)
         stand_in = QAction(action.icon(), text, menu)
         stand_in.setToolTip(action.toolTip())
         stand_in.setStatusTip(action.statusTip())
